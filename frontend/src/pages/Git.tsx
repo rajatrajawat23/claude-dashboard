@@ -8,7 +8,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { GitBranch, GitCommit, FileCode, RefreshCw, Search, AlertCircle } from 'lucide-react';
+import {
+  GitBranch,
+  GitCommit,
+  FileCode,
+  RefreshCw,
+  Search,
+  AlertCircle,
+  FileText,
+  Plus,
+  Minus,
+  User,
+  Clock,
+} from 'lucide-react';
 
 const PROJECT_DIR = '/Users/rajatrajawatpmac/claude-dashboard';
 
@@ -68,18 +80,66 @@ function statusLabel(status: string): string {
   }
 }
 
+// Commit message type prefix parsing
+function parseCommitType(message: string): { type: string; rest: string; color: string; bg: string } {
+  const match = message.match(/^(feat|fix|docs|refactor|chore|style|test|perf|ci|build|revert)(\(.*?\))?:\s*/i);
+  if (!match) return { type: '', rest: message, color: 'var(--text-primary)', bg: 'transparent' };
+  const typeStr = match[1].toLowerCase();
+  const typeMap: Record<string, { color: string; bg: string }> = {
+    feat:     { color: 'var(--success-700)', bg: 'color-mix(in srgb, var(--success-500) 12%, transparent)' },
+    fix:      { color: 'var(--error-700)',   bg: 'color-mix(in srgb, var(--error-500) 12%, transparent)' },
+    docs:     { color: 'var(--info-700)',    bg: 'color-mix(in srgb, var(--info-500) 12%, transparent)' },
+    refactor: { color: 'var(--accent-700)',  bg: 'color-mix(in srgb, var(--accent-500) 12%, transparent)' },
+    chore:    { color: 'var(--text-muted)',  bg: 'color-mix(in srgb, var(--text-muted) 12%, transparent)' },
+    style:    { color: 'var(--accent-600)',  bg: 'color-mix(in srgb, var(--accent-500) 12%, transparent)' },
+    test:     { color: 'var(--warning-700)', bg: 'color-mix(in srgb, var(--warning-500) 12%, transparent)' },
+    perf:     { color: 'var(--brand-700)',   bg: 'color-mix(in srgb, var(--brand-500) 12%, transparent)' },
+    ci:       { color: 'var(--info-600)',    bg: 'color-mix(in srgb, var(--info-500) 12%, transparent)' },
+    build:    { color: 'var(--warning-600)', bg: 'color-mix(in srgb, var(--warning-500) 12%, transparent)' },
+    revert:   { color: 'var(--error-600)',   bg: 'color-mix(in srgb, var(--error-500) 12%, transparent)' },
+  };
+  const cfg = typeMap[typeStr] ?? { color: 'var(--text-muted)', bg: 'transparent' };
+  const prefix = match[0];
+  return { type: prefix.replace(/:\s*$/, ''), rest: message.slice(prefix.length), color: cfg.color, bg: cfg.bg };
+}
+
+// File extension to color/icon
+function getFileTypeStyle(file: string): { color: string; label: string } {
+  const ext = file.split('.').pop()?.toLowerCase() ?? '';
+  const map: Record<string, { color: string; label: string }> = {
+    tsx:  { color: 'var(--info-500)',    label: 'TSX' },
+    ts:   { color: 'var(--info-600)',    label: 'TS' },
+    jsx:  { color: 'var(--info-400)',    label: 'JSX' },
+    js:   { color: 'var(--warning-500)', label: 'JS' },
+    go:   { color: 'var(--info-300)',    label: 'GO' },
+    css:  { color: 'var(--accent-500)',  label: 'CSS' },
+    scss: { color: 'var(--accent-400)',  label: 'SCSS' },
+    md:   { color: 'var(--text-muted)',  label: 'MD' },
+    json: { color: 'var(--warning-400)', label: 'JSON' },
+    yaml: { color: 'var(--success-500)', label: 'YAML' },
+    yml:  { color: 'var(--success-500)', label: 'YML' },
+    html: { color: 'var(--error-400)',   label: 'HTML' },
+    svg:  { color: 'var(--accent-300)',  label: 'SVG' },
+    sql:  { color: 'var(--brand-500)',   label: 'SQL' },
+    sh:   { color: 'var(--success-600)', label: 'SH' },
+    mod:  { color: 'var(--info-300)',    label: 'MOD' },
+    sum:  { color: 'var(--info-200)',    label: 'SUM' },
+  };
+  return map[ext] ?? { color: 'var(--text-muted)', label: ext.toUpperCase() || 'FILE' };
+}
+
 function CommitSkeleton() {
   return (
-    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-lg)' }}>
+    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
       <CardContent className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3 flex-1">
-          <Skeleton className="h-4 w-4 rounded-full" />
+          <Skeleton className="h-8 w-8" style={{ borderRadius: 'var(--radius-lg)' }} />
           <div className="space-y-2 flex-1">
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-3 w-1/3" />
           </div>
         </div>
-        <Skeleton className="h-6 w-16" />
+        <Skeleton className="h-6 w-16" style={{ borderRadius: 'var(--radius-md)' }} />
       </CardContent>
     </Card>
   );
@@ -87,13 +147,93 @@ function CommitSkeleton() {
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--error-500, #ef4444)', borderRadius: 'var(--radius-lg)' }}>
-      <CardContent className="p-6 flex flex-col items-center gap-3 text-center">
-        <AlertCircle className="h-8 w-8" style={{ color: 'var(--error-500, #ef4444)' }} />
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>{message}</p>
-        <Button size="sm" variant="outline" onClick={onRetry}>
+    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
+      <CardContent className="p-10 flex flex-col items-center gap-5 text-center">
+        <div
+          className="flex h-16 w-16 items-center justify-center"
+          style={{
+            background: 'color-mix(in srgb, var(--error-500) 12%, transparent)',
+            borderRadius: 'var(--radius-xl)',
+          }}
+        >
+          <AlertCircle className="h-8 w-8" style={{ color: 'var(--error-500)' }} />
+        </div>
+        <div className="space-y-1">
+          <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Something went wrong</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{message}</p>
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onRetry}
+          className="transition-all hover:scale-[1.02]"
+          style={{ borderRadius: 'var(--radius-lg)' }}
+        >
           <RefreshCw className="h-3 w-3 mr-2" />Retry
         </Button>
+      </CardContent>
+    </Card>
+  );
+}
+
+// Empty states per tab
+function EmptyCommits({ hasSearch }: { hasSearch: boolean }) {
+  return (
+    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
+      <CardContent className="p-12 flex flex-col items-center gap-4">
+        <div
+          className="flex h-16 w-16 items-center justify-center"
+          style={{
+            background: 'color-mix(in srgb, var(--brand-500) 10%, transparent)',
+            borderRadius: 'var(--radius-xl)',
+          }}
+        >
+          <GitCommit className="h-8 w-8" style={{ color: 'var(--brand-400)' }} />
+        </div>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+          {hasSearch ? 'No commits match your search' : 'No commits found'}
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmptyBranches() {
+  return (
+    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
+      <CardContent className="p-12 flex flex-col items-center gap-4">
+        <div
+          className="flex h-16 w-16 items-center justify-center"
+          style={{
+            background: 'color-mix(in srgb, var(--success-500) 10%, transparent)',
+            borderRadius: 'var(--radius-xl)',
+          }}
+        >
+          <GitBranch className="h-8 w-8" style={{ color: 'var(--success-400)' }} />
+        </div>
+        <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No branches found</p>
+      </CardContent>
+    </Card>
+  );
+}
+
+function EmptyChanges() {
+  return (
+    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
+      <CardContent className="p-12 flex flex-col items-center gap-4">
+        <div
+          className="flex h-16 w-16 items-center justify-center"
+          style={{
+            background: 'color-mix(in srgb, var(--success-500) 10%, transparent)',
+            borderRadius: 'var(--radius-xl)',
+          }}
+        >
+          <FileCode className="h-8 w-8" style={{ color: 'var(--success-400)' }} />
+        </div>
+        <div className="text-center space-y-1">
+          <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Working tree clean</p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>No uncommitted changes</p>
+        </div>
       </CardContent>
     </Card>
   );
@@ -140,56 +280,139 @@ export default function Git() {
 
   const isRefreshing = commitsQuery.isFetching || branchesQuery.isFetching || statusQuery.isFetching;
 
+  // Compute changes summary
+  const changesAdded = (statusQuery.data ?? []).filter(c => c.status === 'A' || c.status === '?').length;
+  const changesModified = (statusQuery.data ?? []).filter(c => c.status === 'M').length;
+  const changesDeleted = (statusQuery.data ?? []).filter(c => c.status === 'D').length;
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Git</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Repository and version control</p>
+          <h1
+            className="text-2xl font-bold"
+            style={{
+              background: 'linear-gradient(135deg, var(--brand-500), var(--success-500))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Git
+          </h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
+            Repository and version control
+          </p>
         </div>
-        <Button size="sm" variant="outline" onClick={handleRefresh} disabled={isRefreshing}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="transition-all hover:scale-[1.02]"
+          style={{
+            borderRadius: 'var(--radius-lg)',
+            borderColor: 'var(--border-subtle)',
+            color: 'var(--text-secondary)',
+          }}
+        >
           <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
       </div>
 
       <Tabs defaultValue="commits" className="space-y-4">
-        <TabsList style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)' }}>
-          <TabsTrigger value="commits">
+        <TabsList
+          style={{
+            background: 'var(--bg-card)',
+            borderRadius: 'var(--radius-xl)',
+            padding: '4px',
+          }}
+        >
+          <TabsTrigger value="commits" style={{ borderRadius: 'var(--radius-lg)' }}>
             <GitCommit className="h-4 w-4 mr-2" />
             Commits
             {commitsQuery.data && (
-              <Badge variant="secondary" className="ml-2 text-xs">{commitsQuery.data.length}</Badge>
+              <Badge
+                className="ml-2 text-[11px]"
+                style={{
+                  background: 'color-mix(in srgb, var(--brand-500) 12%, transparent)',
+                  color: 'var(--brand-600)',
+                  borderRadius: 'var(--radius-md)',
+                }}
+              >
+                {commitsQuery.data.length}
+              </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="branches">
+          <TabsTrigger value="branches" style={{ borderRadius: 'var(--radius-lg)' }}>
             <GitBranch className="h-4 w-4 mr-2" />
             Branches
             {branchesQuery.data && (
-              <Badge variant="secondary" className="ml-2 text-xs">{branchesQuery.data.length}</Badge>
+              <Badge
+                className="ml-2 text-[11px]"
+                style={{
+                  background: 'color-mix(in srgb, var(--success-500) 12%, transparent)',
+                  color: 'var(--success-600)',
+                  borderRadius: 'var(--radius-md)',
+                }}
+              >
+                {branchesQuery.data.length}
+              </Badge>
             )}
           </TabsTrigger>
-          <TabsTrigger value="changes">
+          <TabsTrigger value="changes" style={{ borderRadius: 'var(--radius-lg)' }}>
             <FileCode className="h-4 w-4 mr-2" />
             Changes
             {statusQuery.data && (
-              <Badge variant="secondary" className="ml-2 text-xs">{statusQuery.data.length}</Badge>
+              <Badge
+                className="ml-2 text-[11px]"
+                style={{
+                  background: statusQuery.data.length > 0
+                    ? 'color-mix(in srgb, var(--warning-500) 12%, transparent)'
+                    : 'color-mix(in srgb, var(--success-500) 12%, transparent)',
+                  color: statusQuery.data.length > 0 ? 'var(--warning-600)' : 'var(--success-600)',
+                  borderRadius: 'var(--radius-md)',
+                }}
+              >
+                {statusQuery.data.length}
+              </Badge>
             )}
           </TabsTrigger>
         </TabsList>
 
         {/* Commits Tab */}
         <TabsContent value="commits" className="space-y-3">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--text-muted)' }} />
-            <Input
-              placeholder="Search commits..."
-              value={commitSearch}
-              onChange={(e) => setCommitSearch(e.target.value)}
-              className="pl-9"
-              style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-md)', color: 'var(--text-primary)' }}
-            />
-          </div>
+          {/* Search bar */}
+          <Card
+            className="p-3"
+            style={{
+              background: 'var(--bg-card)',
+              borderColor: 'var(--border-subtle)',
+              borderRadius: 'var(--radius-xl)',
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            <div className="relative">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
+                style={{ color: 'var(--text-muted)' }}
+              />
+              <Input
+                placeholder="Search commits..."
+                value={commitSearch}
+                onChange={(e) => setCommitSearch(e.target.value)}
+                className="pl-9"
+                style={{
+                  background: 'var(--bg-elevated)',
+                  borderColor: 'var(--border-subtle)',
+                  borderRadius: 'var(--radius-lg)',
+                  color: 'var(--text-primary)',
+                }}
+              />
+            </div>
+          </Card>
 
           {commitsQuery.isLoading && (
             <div className="space-y-2">
@@ -205,33 +428,101 @@ export default function Git() {
           )}
 
           {commitsQuery.isSuccess && filteredCommits.length === 0 && (
-            <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-lg)' }}>
-              <CardContent className="p-6 text-center">
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
-                  {commitSearch ? 'No commits match your search' : 'No commits found'}
-                </p>
-              </CardContent>
-            </Card>
+            <EmptyCommits hasSearch={commitSearch !== ''} />
           )}
 
-          {filteredCommits.map((commit) => (
-            <Card key={commit.hash} style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-lg)' }}>
-              <CardContent className="p-4 flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3 min-w-0 flex-1">
-                  <GitCommit className="h-4 w-4 shrink-0" style={{ color: 'var(--brand-500)' }} />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate" style={{ color: 'var(--text-primary)' }}>{commit.message}</p>
-                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                      {commit.author} &middot; {formatRelativeTime(commit.date)}
-                    </p>
-                  </div>
-                </div>
-                <code className="text-xs font-mono px-2 py-1 rounded shrink-0" style={{ background: 'var(--bg-elevated)', color: 'var(--brand-400)', borderRadius: 'var(--radius-sm)' }}>
-                  {commit.shortHash || commit.hash.slice(0, 7)}
-                </code>
-              </CardContent>
-            </Card>
-          ))}
+          {/* Commit list with branch-graph-style timeline */}
+          {filteredCommits.length > 0 && (
+            <div className="relative">
+              {/* Vertical timeline line */}
+              <div
+                className="absolute left-[27px] top-4 bottom-4"
+                style={{
+                  width: '2px',
+                  background: 'linear-gradient(to bottom, var(--brand-300), var(--border-subtle))',
+                  borderRadius: '1px',
+                }}
+              />
+              <div className="space-y-2">
+                {filteredCommits.map((commit) => {
+                  const parsed = parseCommitType(commit.message);
+                  return (
+                    <Card
+                      key={commit.hash}
+                      className="transition-all hover:scale-[1.005] relative"
+                      style={{
+                        background: 'var(--bg-card)',
+                        borderColor: 'var(--border-subtle)',
+                        borderRadius: 'var(--radius-xl)',
+                      }}
+                    >
+                      <CardContent className="p-4 flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-3 min-w-0 flex-1">
+                          {/* Graph dot */}
+                          <div
+                            className="relative z-10 flex h-[14px] w-[14px] items-center justify-center shrink-0"
+                            style={{
+                              background: 'var(--brand-500)',
+                              borderRadius: 'var(--radius-full)',
+                              boxShadow: '0 0 0 3px var(--bg-card)',
+                            }}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {parsed.type && (
+                                <span
+                                  className="text-[11px] font-semibold px-2 py-0.5 shrink-0"
+                                  style={{
+                                    color: parsed.color,
+                                    background: parsed.bg,
+                                    borderRadius: 'var(--radius-md)',
+                                  }}
+                                >
+                                  {parsed.type}
+                                </span>
+                              )}
+                              <p
+                                className="text-sm font-medium truncate"
+                                style={{ color: 'var(--text-primary)' }}
+                              >
+                                {parsed.rest || commit.message}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3 mt-1 flex-wrap">
+                              <span
+                                className="flex items-center gap-1 text-xs"
+                                style={{ color: 'var(--text-muted)' }}
+                              >
+                                <User className="h-3 w-3" />
+                                {commit.author}
+                              </span>
+                              <span
+                                className="flex items-center gap-1 text-xs"
+                                style={{ color: 'var(--text-muted)' }}
+                              >
+                                <Clock className="h-3 w-3" />
+                                {formatRelativeTime(commit.date)}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        <code
+                          className="text-[11px] font-mono px-2.5 py-1 shrink-0 font-medium"
+                          style={{
+                            background: 'color-mix(in srgb, var(--brand-500) 10%, transparent)',
+                            color: 'var(--brand-500)',
+                            borderRadius: 'var(--radius-md)',
+                          }}
+                        >
+                          {commit.shortHash || commit.hash.slice(0, 7)}
+                        </code>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         {/* Branches Tab */}
@@ -249,34 +540,80 @@ export default function Git() {
             />
           )}
 
-          {branchesQuery.isSuccess && branchesQuery.data.length === 0 && (
-            <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-lg)' }}>
-              <CardContent className="p-6 text-center">
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No branches found</p>
-              </CardContent>
-            </Card>
-          )}
+          {branchesQuery.isSuccess && branchesQuery.data.length === 0 && <EmptyBranches />}
 
           {(branchesQuery.data ?? []).map((branch) => (
-            <Card key={branch.name} style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-lg)' }}>
+            <Card
+              key={branch.name}
+              className="transition-all hover:scale-[1.005]"
+              style={{
+                background: 'var(--bg-card)',
+                borderColor: branch.current ? 'var(--success-300)' : 'var(--border-subtle)',
+                borderRadius: 'var(--radius-xl)',
+                borderLeftWidth: branch.current ? '3px' : '1px',
+                borderLeftColor: branch.current ? 'var(--success-500)' : undefined,
+              }}
+            >
               <CardContent className="p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <GitBranch className="h-4 w-4" style={{ color: branch.current ? 'var(--success-500)' : 'var(--text-muted)' }} />
-                  <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>{branch.name}</span>
-                  {branch.current && (
-                    <Badge style={{ background: 'var(--success-100)', color: 'var(--success-800)', borderRadius: 'var(--radius-sm)' }}>
-                      current
-                    </Badge>
-                  )}
+                  <div
+                    className="flex h-9 w-9 items-center justify-center shrink-0"
+                    style={{
+                      background: branch.current
+                        ? 'color-mix(in srgb, var(--success-500) 15%, transparent)'
+                        : 'color-mix(in srgb, var(--text-muted) 10%, transparent)',
+                      borderRadius: 'var(--radius-lg)',
+                    }}
+                  >
+                    <GitBranch
+                      className="h-4 w-4"
+                      style={{ color: branch.current ? 'var(--success-500)' : 'var(--text-muted)' }}
+                    />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                        {branch.name}
+                      </span>
+                      {branch.current && (
+                        <Badge
+                          className="text-[11px]"
+                          style={{
+                            background: 'color-mix(in srgb, var(--success-500) 12%, transparent)',
+                            color: 'var(--success-700)',
+                            borderRadius: 'var(--radius-md)',
+                          }}
+                        >
+                          <div
+                            className="h-1.5 w-1.5 mr-1.5 animate-pulse"
+                            style={{
+                              background: 'var(--success-500)',
+                              borderRadius: 'var(--radius-full)',
+                            }}
+                          />
+                          current
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
                 </div>
-                <code className="text-xs font-mono" style={{ color: 'var(--text-muted)' }}>{branch.commit}</code>
+                <code
+                  className="text-[11px] font-mono px-2 py-1 font-medium"
+                  style={{
+                    background: 'color-mix(in srgb, var(--text-muted) 8%, transparent)',
+                    color: 'var(--text-muted)',
+                    borderRadius: 'var(--radius-md)',
+                  }}
+                >
+                  {branch.commit}
+                </code>
               </CardContent>
             </Card>
           ))}
         </TabsContent>
 
         {/* Changes Tab */}
-        <TabsContent value="changes" className="space-y-2">
+        <TabsContent value="changes" className="space-y-3">
           {statusQuery.isLoading && (
             <div className="space-y-2">
               {Array.from({ length: 3 }).map((_, i) => <CommitSkeleton key={i} />)}
@@ -290,24 +627,95 @@ export default function Git() {
             />
           )}
 
-          {statusQuery.isSuccess && statusQuery.data.length === 0 && (
-            <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-lg)' }}>
-              <CardContent className="p-6 text-center">
-                <p className="text-sm" style={{ color: 'var(--text-muted)' }}>Working tree clean - no changes</p>
-              </CardContent>
+          {statusQuery.isSuccess && statusQuery.data.length === 0 && <EmptyChanges />}
+
+          {/* Changes summary bar */}
+          {statusQuery.isSuccess && statusQuery.data.length > 0 && (
+            <Card
+              className="p-3"
+              style={{
+                background: 'var(--bg-card)',
+                borderColor: 'var(--border-subtle)',
+                borderRadius: 'var(--radius-xl)',
+                backdropFilter: 'blur(8px)',
+              }}
+            >
+              <div className="flex items-center gap-4 text-xs">
+                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                  Summary:
+                </span>
+                {changesAdded > 0 && (
+                  <span className="flex items-center gap-1" style={{ color: 'var(--success-600)' }}>
+                    <Plus className="h-3 w-3" />{changesAdded} added
+                  </span>
+                )}
+                {changesModified > 0 && (
+                  <span className="flex items-center gap-1" style={{ color: 'var(--warning-600)' }}>
+                    <FileText className="h-3 w-3" />{changesModified} modified
+                  </span>
+                )}
+                {changesDeleted > 0 && (
+                  <span className="flex items-center gap-1" style={{ color: 'var(--error-600)' }}>
+                    <Minus className="h-3 w-3" />{changesDeleted} deleted
+                  </span>
+                )}
+              </div>
             </Card>
           )}
 
           {(statusQuery.data ?? []).map((change) => {
             const color = statusColor(change.status);
+            const fileStyle = getFileTypeStyle(change.file);
             return (
-              <Card key={change.file} style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-lg)' }}>
+              <Card
+                key={change.file}
+                className="transition-all hover:scale-[1.005]"
+                style={{
+                  background: 'var(--bg-card)',
+                  borderColor: 'var(--border-subtle)',
+                  borderRadius: 'var(--radius-xl)',
+                }}
+              >
                 <CardContent className="p-4 flex items-center gap-3">
-                  <Badge style={{ background: `color-mix(in srgb, ${color} 15%, transparent)`, color, borderRadius: 'var(--radius-xs)', width: '24px', justifyContent: 'center' }}>
+                  {/* Status badge */}
+                  <Badge
+                    className="text-[11px] font-bold shrink-0"
+                    style={{
+                      background: `color-mix(in srgb, ${color} 15%, transparent)`,
+                      color,
+                      borderRadius: 'var(--radius-md)',
+                      width: '28px',
+                      justifyContent: 'center',
+                    }}
+                  >
                     {change.status}
                   </Badge>
-                  <code className="text-sm font-mono flex-1 truncate" style={{ color: 'var(--text-secondary)' }}>{change.file}</code>
-                  <span className="text-xs shrink-0" style={{ color }}>{statusLabel(change.status)}</span>
+                  {/* File type badge */}
+                  <Badge
+                    className="text-[10px] font-mono font-medium shrink-0"
+                    style={{
+                      background: `color-mix(in srgb, ${fileStyle.color} 12%, transparent)`,
+                      color: fileStyle.color,
+                      borderRadius: 'var(--radius-md)',
+                      padding: '1px 6px',
+                    }}
+                  >
+                    {fileStyle.label}
+                  </Badge>
+                  {/* File path */}
+                  <code
+                    className="text-sm font-mono flex-1 truncate"
+                    style={{ color: 'var(--text-secondary)' }}
+                  >
+                    {change.file}
+                  </code>
+                  {/* Status label */}
+                  <span
+                    className="text-xs font-medium shrink-0"
+                    style={{ color }}
+                  >
+                    {statusLabel(change.status)}
+                  </span>
                 </CardContent>
               </Card>
             );

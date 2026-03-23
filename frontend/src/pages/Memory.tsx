@@ -28,7 +28,7 @@ import {
 import {
   Brain,
   Plus,
-  Edit,
+  Pencil,
   Trash2,
   Search,
   ArrowUpDown,
@@ -37,6 +37,14 @@ import {
   AlertCircle,
   RefreshCw,
   FileText,
+  BookOpen,
+  Tag,
+  FolderTree,
+  User,
+  Hash,
+  Eye,
+  ChevronDown,
+  Filter,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -90,18 +98,18 @@ function parseMemory(file: MemoryFile): ParsedMemory {
   return { ...file, frontmatter, body };
 }
 
-const typeColors: Record<string, { bg: string; text: string }> = {
-  index: { bg: 'var(--info-100)', text: 'var(--info-800)' },
-  user: { bg: 'var(--brand-100)', text: 'var(--brand-800)' },
-  feedback: { bg: 'var(--warning-100)', text: 'var(--warning-800)' },
-  project: { bg: 'var(--success-100)', text: 'var(--success-800)' },
-  reference: { bg: 'var(--accent-100)', text: 'var(--accent-800)' },
-  other: { bg: 'var(--bg-elevated)', text: 'var(--text-secondary)' },
+const typeConfig: Record<string, { bg: string; text: string; icon: typeof Brain; iconBg: string }> = {
+  user:      { bg: 'var(--brand-100)',   text: 'var(--brand-800)',   icon: User,       iconBg: 'var(--brand-500)' },
+  feedback:  { bg: 'var(--warning-100)', text: 'var(--warning-800)', icon: Tag,        iconBg: 'var(--warning-500)' },
+  project:   { bg: 'var(--success-100)', text: 'var(--success-800)', icon: FolderTree, iconBg: 'var(--success-500)' },
+  reference: { bg: 'var(--info-100)',    text: 'var(--info-800)',    icon: BookOpen,   iconBg: 'var(--info-500)' },
+  index:     { bg: 'var(--accent-100)',  text: 'var(--accent-800)',  icon: Hash,       iconBg: 'var(--accent-500)' },
+  other:     { bg: 'var(--bg-elevated)', text: 'var(--text-secondary)', icon: FileText, iconBg: 'var(--text-muted)' },
 };
 
-function getTypeColor(type: string | undefined) {
-  if (!type) return typeColors.other;
-  return typeColors[type.toLowerCase()] ?? typeColors.other;
+function getTypeConfig(type: string | undefined) {
+  if (!type) return typeConfig.other;
+  return typeConfig[type.toLowerCase()] ?? typeConfig.other;
 }
 
 const MEMORY_TYPES = ['index', 'user', 'feedback', 'project', 'reference', 'other'] as const;
@@ -125,22 +133,47 @@ function MemorySkeleton() {
   return (
     <div className="space-y-3">
       {[1, 2, 3].map((i) => (
-        <Card key={i} style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
-          <CardContent className="p-4">
+        <Card
+          key={i}
+          style={{
+            background: 'var(--bg-card)',
+            borderColor: 'var(--border-subtle)',
+            borderRadius: 'var(--radius-xl)',
+          }}
+        >
+          <CardContent className="p-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Skeleton className="h-10 w-10 rounded-xl" style={{ background: 'var(--bg-elevated)' }} />
+                <Skeleton
+                  className="h-11 w-11"
+                  style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-lg)' }}
+                />
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
                     <Skeleton className="h-4 w-36" style={{ background: 'var(--bg-elevated)' }} />
-                    <Skeleton className="h-5 w-16 rounded" style={{ background: 'var(--bg-elevated)' }} />
+                    <Skeleton
+                      className="h-5 w-16"
+                      style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)' }}
+                    />
                   </div>
                   <Skeleton className="h-3 w-48" style={{ background: 'var(--bg-elevated)' }} />
                 </div>
               </div>
-              <Skeleton className="h-8 w-8 rounded" style={{ background: 'var(--bg-elevated)' }} />
+              <div className="flex gap-1">
+                <Skeleton
+                  className="h-8 w-8"
+                  style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)' }}
+                />
+                <Skeleton
+                  className="h-8 w-8"
+                  style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-md)' }}
+                />
+              </div>
             </div>
-            <Skeleton className="mt-3 h-16 w-full rounded-lg" style={{ background: 'var(--bg-elevated)' }} />
+            <Skeleton
+              className="mt-4 h-20 w-full"
+              style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-lg)' }}
+            />
           </CardContent>
         </Card>
       ))}
@@ -154,11 +187,36 @@ function MemorySkeleton() {
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
-      <CardContent className="p-8 flex flex-col items-center gap-4">
-        <AlertCircle className="h-10 w-10" style={{ color: 'var(--error-500)' }} />
-        <p className="text-sm text-center" style={{ color: 'var(--text-muted)' }}>{message}</p>
-        <Button variant="outline" size="sm" onClick={onRetry} style={{ borderRadius: 'var(--radius-md)' }}>
+    <Card
+      style={{
+        background: 'var(--bg-card)',
+        borderColor: 'var(--border-subtle)',
+        borderRadius: 'var(--radius-xl)',
+      }}
+    >
+      <CardContent className="p-10 flex flex-col items-center gap-5">
+        <div
+          className="flex h-16 w-16 items-center justify-center"
+          style={{
+            background: 'color-mix(in srgb, var(--error-500) 12%, transparent)',
+            borderRadius: 'var(--radius-xl)',
+          }}
+        >
+          <AlertCircle className="h-8 w-8" style={{ color: 'var(--error-500)' }} />
+        </div>
+        <div className="text-center space-y-1">
+          <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+            Something went wrong
+          </p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{message}</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onRetry}
+          className="transition-all hover:scale-[1.02]"
+          style={{ borderRadius: 'var(--radius-md)', borderColor: 'var(--border-subtle)' }}
+        >
           <RefreshCw className="h-4 w-4 mr-2" />Retry
         </Button>
       </CardContent>
@@ -172,11 +230,31 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
 
 function EmptyState() {
   return (
-    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
-      <CardContent className="p-12 flex flex-col items-center gap-4">
-        <FileText className="h-12 w-12" style={{ color: 'var(--text-muted)' }} />
-        <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>No memories found</p>
-        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Create your first memory using the button above.</p>
+    <Card
+      style={{
+        background: 'var(--bg-card)',
+        borderColor: 'var(--border-subtle)',
+        borderRadius: 'var(--radius-xl)',
+      }}
+    >
+      <CardContent className="p-16 flex flex-col items-center gap-5">
+        <div
+          className="flex h-20 w-20 items-center justify-center"
+          style={{
+            background: 'color-mix(in srgb, var(--brand-500) 10%, transparent)',
+            borderRadius: 'var(--radius-2xl)',
+          }}
+        >
+          <Brain className="h-10 w-10" style={{ color: 'var(--brand-400)' }} />
+        </div>
+        <div className="text-center space-y-1">
+          <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+            No memories yet
+          </p>
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+            Create your first memory using the button above to get started.
+          </p>
+        </div>
       </CardContent>
     </Card>
   );
@@ -221,34 +299,84 @@ function NewMemoryDialog() {
   return (
     <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) resetForm(); }}>
       <DialogTrigger asChild>
-        <Button size="sm" style={{ background: 'var(--brand-500)', borderRadius: 'var(--radius-md)' }}>
+        <Button
+          size="sm"
+          className="transition-all hover:scale-[1.02]"
+          style={{
+            background: 'var(--brand-500)',
+            borderRadius: 'var(--radius-lg)',
+          }}
+        >
           <Plus className="h-4 w-4 mr-2" />New Memory
         </Button>
       </DialogTrigger>
-      <DialogContent style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)' }}>
+      <DialogContent
+        style={{
+          background: 'var(--bg-card)',
+          borderColor: 'var(--border-subtle)',
+          borderRadius: 'var(--radius-xl)',
+          backdropFilter: 'blur(8px)',
+        }}
+      >
         <DialogHeader>
-          <DialogTitle style={{ color: 'var(--text-primary)' }}>Create New Memory</DialogTitle>
+          <DialogTitle className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <div
+              className="flex h-7 w-7 items-center justify-center"
+              style={{
+                background: 'color-mix(in srgb, var(--brand-500) 15%, transparent)',
+                borderRadius: 'var(--radius-md)',
+              }}
+            >
+              <Plus className="h-4 w-4" style={{ color: 'var(--brand-500)' }} />
+            </div>
+            Create New Memory
+          </DialogTitle>
           <DialogDescription style={{ color: 'var(--text-muted)' }}>
             Add a new persistent memory file for Claude Code.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label style={{ color: 'var(--text-secondary)' }}>Name</Label>
+            <Label className="flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+              <FileText className="h-3.5 w-3.5" style={{ color: 'var(--text-muted)' }} />
+              Name
+            </Label>
             <Input
               placeholder="my_memory.md"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-md)' }}
+              style={{
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-primary)',
+                borderColor: 'var(--border-subtle)',
+                borderRadius: 'var(--radius-lg)',
+              }}
             />
           </div>
           <div className="space-y-2">
-            <Label style={{ color: 'var(--text-secondary)' }}>Type</Label>
+            <Label className="flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+              <Tag className="h-3.5 w-3.5" style={{ color: 'var(--text-muted)' }} />
+              Type
+            </Label>
             <Select value={type} onValueChange={setType}>
-              <SelectTrigger className="w-full" style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
+              <SelectTrigger
+                className="w-full"
+                style={{
+                  background: 'var(--bg-elevated)',
+                  color: 'var(--text-primary)',
+                  borderColor: 'var(--border-subtle)',
+                  borderRadius: 'var(--radius-lg)',
+                }}
+              >
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)' }}>
+              <SelectContent
+                style={{
+                  background: 'var(--bg-card)',
+                  borderColor: 'var(--border-subtle)',
+                  borderRadius: 'var(--radius-lg)',
+                }}
+              >
                 {MEMORY_TYPES.map((t) => (
                   <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
                 ))}
@@ -256,22 +384,39 @@ function NewMemoryDialog() {
             </Select>
           </div>
           <div className="space-y-2">
-            <Label style={{ color: 'var(--text-secondary)' }}>Description</Label>
+            <Label className="flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+              <BookOpen className="h-3.5 w-3.5" style={{ color: 'var(--text-muted)' }} />
+              Description
+            </Label>
             <Input
               placeholder="Short description..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-md)' }}
+              style={{
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-primary)',
+                borderColor: 'var(--border-subtle)',
+                borderRadius: 'var(--radius-lg)',
+              }}
             />
           </div>
           <div className="space-y-2">
-            <Label style={{ color: 'var(--text-secondary)' }}>Content</Label>
+            <Label className="flex items-center gap-1.5" style={{ color: 'var(--text-secondary)' }}>
+              <Eye className="h-3.5 w-3.5" style={{ color: 'var(--text-muted)' }} />
+              Content
+            </Label>
             <Textarea
-              placeholder="Memory content..."
+              placeholder="Memory content (supports markdown)..."
               value={content}
               onChange={(e) => setContent(e.target.value)}
               rows={6}
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-md)' }}
+              className="font-mono text-sm"
+              style={{
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-primary)',
+                borderColor: 'var(--border-subtle)',
+                borderRadius: 'var(--radius-lg)',
+              }}
             />
           </div>
         </div>
@@ -279,14 +424,20 @@ function NewMemoryDialog() {
           <Button
             variant="outline"
             onClick={() => setOpen(false)}
-            style={{ borderRadius: 'var(--radius-md)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
+            className="transition-all hover:scale-[1.01]"
+            style={{
+              borderRadius: 'var(--radius-lg)',
+              borderColor: 'var(--border-subtle)',
+              color: 'var(--text-secondary)',
+            }}
           >
             Cancel
           </Button>
           <Button
             disabled={!name.trim() || createMutation.isPending}
             onClick={() => createMutation.mutate()}
-            style={{ background: 'var(--brand-500)', borderRadius: 'var(--radius-md)' }}
+            className="transition-all hover:scale-[1.01]"
+            style={{ background: 'var(--brand-500)', borderRadius: 'var(--radius-lg)' }}
           >
             {createMutation.isPending ? 'Creating...' : 'Create'}
           </Button>
@@ -322,13 +473,42 @@ function DeleteDialog({ name, onDeleted }: { name: string; onDeleted: () => void
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-8 w-8">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 transition-all"
+          style={{ borderRadius: 'var(--radius-md)' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = 'color-mix(in srgb, var(--error-500) 12%, transparent)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+          }}
+        >
           <Trash2 className="h-4 w-4" style={{ color: 'var(--error-500)' }} />
         </Button>
       </DialogTrigger>
-      <DialogContent style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)' }}>
+      <DialogContent
+        style={{
+          background: 'var(--bg-card)',
+          borderColor: 'var(--border-subtle)',
+          borderRadius: 'var(--radius-xl)',
+          backdropFilter: 'blur(8px)',
+        }}
+      >
         <DialogHeader>
-          <DialogTitle style={{ color: 'var(--text-primary)' }}>Delete Memory</DialogTitle>
+          <DialogTitle className="flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
+            <div
+              className="flex h-7 w-7 items-center justify-center"
+              style={{
+                background: 'color-mix(in srgb, var(--error-500) 15%, transparent)',
+                borderRadius: 'var(--radius-md)',
+              }}
+            >
+              <Trash2 className="h-4 w-4" style={{ color: 'var(--error-500)' }} />
+            </div>
+            Delete Memory
+          </DialogTitle>
           <DialogDescription style={{ color: 'var(--text-muted)' }}>
             Are you sure you want to delete <span className="font-mono font-medium">{name}</span>? This action cannot be undone.
           </DialogDescription>
@@ -337,14 +517,20 @@ function DeleteDialog({ name, onDeleted }: { name: string; onDeleted: () => void
           <Button
             variant="outline"
             onClick={() => setOpen(false)}
-            style={{ borderRadius: 'var(--radius-md)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
+            className="transition-all hover:scale-[1.01]"
+            style={{
+              borderRadius: 'var(--radius-lg)',
+              borderColor: 'var(--border-subtle)',
+              color: 'var(--text-secondary)',
+            }}
           >
             Cancel
           </Button>
           <Button
             disabled={deleteMutation.isPending}
             onClick={() => deleteMutation.mutate()}
-            style={{ background: 'var(--error-500)', borderRadius: 'var(--radius-md)', color: 'white' }}
+            className="transition-all hover:scale-[1.01]"
+            style={{ background: 'var(--error-500)', borderRadius: 'var(--radius-lg)', color: 'white' }}
           >
             {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
           </Button>
@@ -355,12 +541,13 @@ function DeleteDialog({ name, onDeleted }: { name: string; onDeleted: () => void
 }
 
 // ---------------------------------------------------------------------------
-// Memory card (with inline editing)
+// Memory card (with inline editing + expandable content)
 // ---------------------------------------------------------------------------
 
 function MemoryCard({ memory }: { memory: ParsedMemory }) {
   const queryClient = useQueryClient();
   const [editing, setEditing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [editContent, setEditContent] = useState(memory.content);
 
   const updateMutation = useMutation({
@@ -389,37 +576,75 @@ function MemoryCard({ memory }: { memory: ParsedMemory }) {
 
   const memType = (memory.frontmatter.type as string) || 'other';
   const memDesc = (memory.frontmatter.description as string) || '';
-  const colors = getTypeColor(memType);
+  const config = getTypeConfig(memType);
+  const TypeIcon = config.icon;
+  const contentText = memory.body || memory.content;
+  const isLong = contentText.split('\n').length > 6 || contentText.length > 400;
 
   return (
-    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
-      <CardContent className="p-4">
+    <Card
+      className="transition-all hover:scale-[1.005] group"
+      style={{
+        background: 'var(--bg-card)',
+        borderColor: 'var(--border-subtle)',
+        borderRadius: 'var(--radius-xl)',
+      }}
+    >
+      <CardContent className="p-5">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div
-              className="flex h-10 w-10 items-center justify-center rounded-xl shrink-0"
-              style={{ background: 'var(--info-100)' }}
+              className="flex h-11 w-11 items-center justify-center shrink-0"
+              style={{
+                background: `color-mix(in srgb, ${config.iconBg} 15%, transparent)`,
+                borderRadius: 'var(--radius-lg)',
+              }}
             >
-              <Brain className="h-5 w-5" style={{ color: 'var(--icon-memory, var(--info-800))' }} />
+              <TypeIcon className="h-5 w-5" style={{ color: config.iconBg }} />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <p className="font-medium font-mono text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                <p
+                  className="font-medium font-mono text-sm truncate"
+                  style={{ color: 'var(--text-primary)' }}
+                >
                   {memory.name}
                 </p>
-                <Badge style={{ background: colors.bg, color: colors.text, borderRadius: 'var(--radius-sm)' }}>
+                <Badge
+                  className="text-[11px] font-medium"
+                  style={{
+                    background: config.bg,
+                    color: config.text,
+                    borderRadius: 'var(--radius-md)',
+                    padding: '1px 8px',
+                  }}
+                >
                   {memType}
                 </Badge>
               </div>
               {memDesc && (
-                <p className="text-xs mt-1 truncate" style={{ color: 'var(--text-muted)' }}>{memDesc}</p>
+                <p className="text-xs mt-1 truncate" style={{ color: 'var(--text-muted)' }}>
+                  {memDesc}
+                </p>
               )}
             </div>
           </div>
           <div className="flex items-center gap-1 shrink-0">
             {!editing && (
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={startEdit}>
-                <Edit className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 transition-all"
+                onClick={startEdit}
+                style={{ borderRadius: 'var(--radius-md)' }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'color-mix(in srgb, var(--brand-500) 12%, transparent)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                <Pencil className="h-4 w-4" style={{ color: 'var(--text-muted)' }} />
               </Button>
             )}
             <DeleteDialog name={memory.name} onDeleted={() => setEditing(false)} />
@@ -427,20 +652,30 @@ function MemoryCard({ memory }: { memory: ParsedMemory }) {
         </div>
 
         {editing ? (
-          <div className="mt-3 space-y-2">
+          <div className="mt-4 space-y-3">
             <Textarea
               value={editContent}
               onChange={(e) => setEditContent(e.target.value)}
               rows={10}
               className="font-mono text-xs"
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-md)' }}
+              style={{
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-primary)',
+                borderColor: 'var(--border-subtle)',
+                borderRadius: 'var(--radius-lg)',
+              }}
             />
             <div className="flex gap-2 justify-end">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={cancelEdit}
-                style={{ borderRadius: 'var(--radius-md)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
+                className="transition-all hover:scale-[1.01]"
+                style={{
+                  borderRadius: 'var(--radius-lg)',
+                  borderColor: 'var(--border-subtle)',
+                  color: 'var(--text-secondary)',
+                }}
               >
                 <XCircle className="h-4 w-4 mr-1" />Cancel
               </Button>
@@ -448,18 +683,58 @@ function MemoryCard({ memory }: { memory: ParsedMemory }) {
                 size="sm"
                 disabled={updateMutation.isPending}
                 onClick={() => updateMutation.mutate()}
-                style={{ background: 'var(--brand-500)', borderRadius: 'var(--radius-md)' }}
+                className="transition-all hover:scale-[1.01]"
+                style={{ background: 'var(--brand-500)', borderRadius: 'var(--radius-lg)' }}
               >
-                <Save className="h-4 w-4 mr-1" />{updateMutation.isPending ? 'Saving...' : 'Save'}
+                <Save className="h-4 w-4 mr-1" />
+                {updateMutation.isPending ? 'Saving...' : 'Save'}
               </Button>
             </div>
           </div>
         ) : (
-          <div
-            className="mt-3 p-3 rounded-lg font-mono text-xs whitespace-pre-wrap overflow-auto max-h-48"
-            style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', borderRadius: 'var(--radius-md)' }}
-          >
-            {memory.body || memory.content}
+          <div className="mt-4">
+            {/* Markdown-feel content preview */}
+            <div
+              className="relative overflow-hidden"
+              style={{
+                maxHeight: expanded || !isLong ? 'none' : '120px',
+                transition: 'max-height 0.3s ease',
+              }}
+            >
+              <div
+                className="p-4 font-mono text-xs leading-relaxed whitespace-pre-wrap"
+                style={{
+                  background: 'var(--bg-elevated)',
+                  color: 'var(--text-secondary)',
+                  borderRadius: 'var(--radius-lg)',
+                  borderLeft: `3px solid ${config.iconBg}`,
+                }}
+              >
+                {contentText}
+              </div>
+              {/* Fade overlay when collapsed */}
+              {isLong && !expanded && (
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-12 pointer-events-none"
+                  style={{
+                    background: 'linear-gradient(transparent, var(--bg-card))',
+                  }}
+                />
+              )}
+            </div>
+            {isLong && (
+              <button
+                onClick={() => setExpanded(!expanded)}
+                className="mt-2 flex items-center gap-1 text-xs font-medium transition-colors"
+                style={{ color: 'var(--brand-500)', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                <ChevronDown
+                  className="h-3.5 w-3.5 transition-transform"
+                  style={{ transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                />
+                {expanded ? 'Show less' : 'Show more'}
+              </button>
+            )}
           </div>
         )}
       </CardContent>
@@ -534,11 +809,30 @@ export default function Memory() {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Memory</h1>
+          <h1
+            className="text-2xl font-bold"
+            style={{
+              background: 'linear-gradient(135deg, var(--brand-500), var(--accent-500))',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            Memory
+          </h1>
           <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
             Manage Claude Code persistent memory
             {rawMemories && rawMemories.length > 0 && (
-              <span className="ml-1">({rawMemories.length} file{rawMemories.length !== 1 ? 's' : ''})</span>
+              <Badge
+                className="ml-2 align-middle text-[11px]"
+                style={{
+                  background: 'color-mix(in srgb, var(--brand-500) 12%, transparent)',
+                  color: 'var(--brand-600)',
+                  borderRadius: 'var(--radius-md)',
+                }}
+              >
+                {rawMemories.length} file{rawMemories.length !== 1 ? 's' : ''}
+              </Badge>
             )}
           </p>
         </div>
@@ -547,38 +841,77 @@ export default function Memory() {
 
       {/* Toolbar: search, filter, sort */}
       {!isLoading && !isError && rawMemories && rawMemories.length > 0 && (
-        <div className="flex items-center gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: 'var(--text-muted)' }} />
-            <Input
-              placeholder="Search memories..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 text-sm"
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-md)' }}
-            />
+        <Card
+          className="p-3"
+          style={{
+            background: 'var(--bg-card)',
+            borderColor: 'var(--border-subtle)',
+            borderRadius: 'var(--radius-xl)',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4"
+                style={{ color: 'var(--text-muted)' }}
+              />
+              <Input
+                placeholder="Search memories..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9 text-sm"
+                style={{
+                  background: 'var(--bg-elevated)',
+                  color: 'var(--text-primary)',
+                  borderColor: 'var(--border-subtle)',
+                  borderRadius: 'var(--radius-lg)',
+                }}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <Filter className="h-3.5 w-3.5" style={{ color: 'var(--text-muted)' }} />
+              <Select value={filterType} onValueChange={setFilterType}>
+                <SelectTrigger
+                  style={{
+                    background: 'var(--bg-elevated)',
+                    color: 'var(--text-primary)',
+                    borderColor: 'var(--border-subtle)',
+                    borderRadius: 'var(--radius-lg)',
+                  }}
+                >
+                  <SelectValue placeholder="Filter by type" />
+                </SelectTrigger>
+                <SelectContent
+                  style={{
+                    background: 'var(--bg-card)',
+                    borderColor: 'var(--border-subtle)',
+                    borderRadius: 'var(--radius-lg)',
+                  }}
+                >
+                  <SelectItem value="all">All types</SelectItem>
+                  {allTypes.map((t) => (
+                    <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSortBy((prev) => (prev === 'name' ? 'type' : 'name'))}
+              className="transition-all hover:scale-[1.02]"
+              style={{
+                borderRadius: 'var(--radius-lg)',
+                borderColor: 'var(--border-subtle)',
+                color: 'var(--text-secondary)',
+              }}
+            >
+              <ArrowUpDown className="h-4 w-4 mr-1" />
+              Sort by {sortBy === 'name' ? 'type' : 'name'}
+            </Button>
           </div>
-          <Select value={filterType} onValueChange={setFilterType}>
-            <SelectTrigger style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-md)' }}>
-              <SelectValue placeholder="Filter by type" />
-            </SelectTrigger>
-            <SelectContent style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)' }}>
-              <SelectItem value="all">All types</SelectItem>
-              {allTypes.map((t) => (
-                <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setSortBy((prev) => (prev === 'name' ? 'type' : 'name'))}
-            style={{ borderRadius: 'var(--radius-md)', borderColor: 'var(--border-subtle)', color: 'var(--text-secondary)' }}
-          >
-            <ArrowUpDown className="h-4 w-4 mr-1" />
-            Sort by {sortBy === 'name' ? 'type' : 'name'}
-          </Button>
-        </div>
+        </Card>
       )}
 
       {/* Content */}
@@ -587,9 +920,26 @@ export default function Memory() {
       ) : isError ? (
         <ErrorState message="Failed to load memories." onRetry={() => refetch()} />
       ) : memories.length === 0 && rawMemories && rawMemories.length > 0 ? (
-        <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
-          <CardContent className="p-8 text-center">
-            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>No memories match your search or filter.</p>
+        <Card
+          style={{
+            background: 'var(--bg-card)',
+            borderColor: 'var(--border-subtle)',
+            borderRadius: 'var(--radius-xl)',
+          }}
+        >
+          <CardContent className="p-10 flex flex-col items-center gap-4">
+            <div
+              className="flex h-14 w-14 items-center justify-center"
+              style={{
+                background: 'color-mix(in srgb, var(--text-muted) 10%, transparent)',
+                borderRadius: 'var(--radius-xl)',
+              }}
+            >
+              <Search className="h-7 w-7" style={{ color: 'var(--text-muted)' }} />
+            </div>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>
+              No memories match your search or filter.
+            </p>
           </CardContent>
         </Card>
       ) : memories.length === 0 ? (
