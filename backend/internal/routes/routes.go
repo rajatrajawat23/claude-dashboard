@@ -39,6 +39,10 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	plugins := handlers.NewPluginHandler(db, bridge)
 	api.Get("/plugins", plugins.List)
 
+	// Claude Sessions (reads from ~/.claude/projects/ - no DB needed)
+	claudeSessions := handlers.NewClaudeSessionsHandler(bridge)
+	api.Get("/claude/sessions", claudeSessions.ListProjects)
+
 	// Git (shell commands - no DB needed)
 	cwd, _ := os.Getwd()
 	git := handlers.NewGitHandler(cwd)

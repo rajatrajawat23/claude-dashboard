@@ -65,18 +65,85 @@ func (b *ClaudeBridge) WriteSettings(scope string, settings *ClaudeSettingsFile)
 	return os.WriteFile(filePath, data, 0644)
 }
 
-func (b *ClaudeBridge) ListSessions() ([]string, error) {
+type ProjectSession struct {
+	DirName      string `json:"dirName"`
+	ProjectPath  string `json:"projectPath"`
+	ProjectName  string `json:"projectName"`
+	SessionCount int    `json:"sessionCount"`
+	ModifiedAt   string `json:"modifiedAt"`
+	HasMemory    bool   `json:"hasMemory"`
+}
+
+func (b *ClaudeBridge) ListSessions() ([]ProjectSession, error) {
 	projectsDir := filepath.Join(b.HomePath, "projects")
 	entries, err := os.ReadDir(projectsDir)
 	if err != nil {
 		return nil, err
 	}
 
-	var sessions []string
+	var sessions []ProjectSession
 	for _, entry := range entries {
-		if entry.IsDir() {
-			sessions = append(sessions, entry.Name())
+		if !entry.IsDir() {
+			continue
 		}
+		dirName := entry.Name()
+
+		// Decode the directory name back to a filesystem path
+		// e.g. "-Users-rajatrajawatpmac-claude-dashboard" -> "/Users/rajatrajawatpmac/claude-dashboard"
+		projectPath := strings.ReplaceAll(dirName, "-", "/")
+		// Fix double-dashes which represent literal dashes in the original path
+		// Actually the encoding uses single dashes for path separators
+		// The raw dirName with leading dash becomes a leading slash
+		if !strings.HasPrefix(projectPath, "/") {
+			projectPath = "/" + projectPath
+		}
+
+		// Project name is the last path segment
+		parts := strings.Split(strings.TrimRight(projectPath, "/"), "/")
+		projectName := dirName
+		if len(parts) > 0 {
+			projectName = parts[len(parts)-1]
+		}
+
+		// Count .jsonl session files inside the project dir
+		subDir := filepath.Join(projectsDir, dirName)
+		subEntries, err := os.ReadDir(subDir)
+		sessionCount := 0
+		hasMemory := false
+		var latestMod string
+		if err == nil {
+			for _, sub := range subEntries {
+				if !sub.IsDir() && strings.HasSuffix(sub.Name(), ".jsonl") {
+					sessionCount++
+					info, infoErr := sub.Info()
+					if infoErr == nil {
+						mod := info.ModTime().Format("2006-01-02T15:04:05Z07:00")
+						if mod > latestMod {
+							latestMod = mod
+						}
+					}
+				}
+				if sub.IsDir() && sub.Name() == "memory" {
+					hasMemory = true
+				}
+			}
+		}
+
+		if latestMod == "" {
+			info, infoErr := entry.Info()
+			if infoErr == nil {
+				latestMod = info.ModTime().Format("2006-01-02T15:04:05Z07:00")
+			}
+		}
+
+		sessions = append(sessions, ProjectSession{
+			DirName:      dirName,
+			ProjectPath:  projectPath,
+			ProjectName:  projectName,
+			SessionCount: sessionCount,
+			ModifiedAt:   latestMod,
+			HasMemory:    hasMemory,
+		})
 	}
 	return sessions, nil
 }
