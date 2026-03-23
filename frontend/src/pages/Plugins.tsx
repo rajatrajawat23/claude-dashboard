@@ -19,6 +19,10 @@ import {
   CheckCircle2,
   Calendar,
   Store,
+  Sparkles,
+  Shield,
+  Package,
+  Zap,
 } from 'lucide-react';
 
 // ---------------------------------------------------------------------------
@@ -50,6 +54,17 @@ interface SettingsResponse {
 }
 
 // ---------------------------------------------------------------------------
+// Gradient text style
+// ---------------------------------------------------------------------------
+
+const gradientTextStyle: React.CSSProperties = {
+  background: 'linear-gradient(135deg, var(--brand-500), var(--accent-500))',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+};
+
+// ---------------------------------------------------------------------------
 // Fetchers
 // ---------------------------------------------------------------------------
 
@@ -69,7 +84,7 @@ async function fetchSettings(): Promise<SettingsData> {
 
 function PluginCardSkeleton() {
   return (
-    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
+    <Card className="card-premium" style={{ borderRadius: 'var(--radius-xl)' }}>
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -78,8 +93,8 @@ function PluginCardSkeleton() {
               <Skeleton className="h-4 w-32" style={{ background: 'var(--bg-elevated)' }} />
               <Skeleton className="h-3 w-48" style={{ background: 'var(--bg-elevated)' }} />
               <div className="flex gap-2">
-                <Skeleton className="h-5 w-16" style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-xs)' }} />
-                <Skeleton className="h-5 w-24" style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-xs)' }} />
+                <Skeleton className="h-5 w-16 animate-shimmer" style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-xs)' }} />
+                <Skeleton className="h-5 w-24 animate-shimmer" style={{ background: 'var(--bg-elevated)', borderRadius: 'var(--radius-xs)' }} />
               </div>
             </div>
           </div>
@@ -104,11 +119,11 @@ function MarketplaceSkeleton() {
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
       {[1, 2, 3, 4, 5, 6].map((i) => (
-        <Card key={i} style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
+        <Card key={i} className="card-premium" style={{ borderRadius: 'var(--radius-xl)' }}>
           <CardContent className="p-4 text-center">
-            <Skeleton className="h-8 w-8 mx-auto mb-2 rounded" style={{ background: 'var(--bg-elevated)' }} />
-            <Skeleton className="h-4 w-20 mx-auto mb-1" style={{ background: 'var(--bg-elevated)' }} />
-            <Skeleton className="h-3 w-28 mx-auto" style={{ background: 'var(--bg-elevated)' }} />
+            <Skeleton className="h-8 w-8 mx-auto mb-2 rounded animate-shimmer" style={{ background: 'var(--bg-elevated)' }} />
+            <Skeleton className="h-4 w-20 mx-auto mb-1 animate-shimmer" style={{ background: 'var(--bg-elevated)' }} />
+            <Skeleton className="h-3 w-28 mx-auto animate-shimmer" style={{ background: 'var(--bg-elevated)' }} />
           </CardContent>
         </Card>
       ))}
@@ -122,9 +137,14 @@ function MarketplaceSkeleton() {
 
 function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
+    <Card className="card-premium" style={{ borderRadius: 'var(--radius-xl)' }}>
       <CardContent className="p-8 flex flex-col items-center gap-4">
-        <AlertCircle className="h-10 w-10" style={{ color: 'var(--error-500)' }} />
+        <div
+          className="flex h-14 w-14 items-center justify-center rounded-2xl"
+          style={{ background: 'color-mix(in srgb, var(--error-500) 12%, transparent)' }}
+        >
+          <AlertCircle className="h-7 w-7" style={{ color: 'var(--error-500)' }} />
+        </div>
         <p className="text-sm text-center" style={{ color: 'var(--text-muted)' }}>{message}</p>
         <Button variant="outline" size="sm" onClick={onRetry} style={{ borderRadius: 'var(--radius-md)' }}>
           <RefreshCw className="h-4 w-4 mr-2" />Retry
@@ -140,9 +160,14 @@ function ErrorState({ message, onRetry }: { message: string; onRetry: () => void
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
+    <Card className="card-premium" style={{ borderRadius: 'var(--radius-xl)' }}>
       <CardContent className="p-8 text-center">
-        <Puzzle className="h-10 w-10 mx-auto mb-3" style={{ color: 'var(--text-muted)' }} />
+        <div
+          className="flex h-14 w-14 items-center justify-center rounded-2xl mx-auto mb-3 animate-float"
+          style={{ background: 'color-mix(in srgb, var(--brand-500) 12%, transparent)', borderRadius: 'var(--radius-lg)' }}
+        >
+          <Puzzle className="h-7 w-7" style={{ color: 'var(--brand-500)' }} />
+        </div>
         <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{message}</p>
       </CardContent>
     </Card>
@@ -201,22 +226,27 @@ function InstalledTab({
         return (
           <Card
             key={plugin.name}
+            className="card-premium transition-all hover:scale-[1.01]"
             style={{
-              background: 'var(--bg-card)',
-              borderColor: 'var(--border-subtle)',
               borderRadius: 'var(--radius-xl)',
+              borderLeft: isEnabled ? '3px solid var(--brand-500)' : '3px solid transparent',
             }}
           >
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div
-                    className="flex h-10 w-10 items-center justify-center rounded-xl"
-                    style={{ background: isEnabled ? 'var(--accent-100)' : 'var(--bg-elevated)' }}
+                    className="flex h-10 w-10 items-center justify-center rounded-xl transition-all"
+                    style={{
+                      background: isEnabled
+                        ? 'color-mix(in srgb, var(--brand-500) 12%, transparent)'
+                        : 'color-mix(in srgb, var(--text-muted) 8%, transparent)',
+                      borderRadius: 'var(--radius-lg)',
+                    }}
                   >
                     <Puzzle
                       className="h-5 w-5"
-                      style={{ color: isEnabled ? 'var(--icon-plugin, var(--brand-500))' : 'var(--text-muted)' }}
+                      style={{ color: isEnabled ? 'var(--brand-500)' : 'var(--text-muted)' }}
                     />
                   </div>
                   <div>
@@ -227,17 +257,18 @@ function InstalledTab({
                       <Badge
                         variant="outline"
                         className="text-[10px]"
-                        style={{ borderRadius: 'var(--radius-xs)' }}
+                        style={{ borderRadius: 'var(--radius-md)' }}
                       >
+                        <Package className="h-2.5 w-2.5 mr-1" />
                         {plugin.version}
                       </Badge>
                       <Badge
                         variant="secondary"
                         className="text-[10px] flex items-center gap-1"
                         style={{
-                          borderRadius: 'var(--radius-xs)',
-                          background: 'var(--bg-elevated)',
-                          color: 'var(--text-muted)',
+                          borderRadius: 'var(--radius-md)',
+                          background: 'color-mix(in srgb, var(--accent-500) 10%, transparent)',
+                          color: 'var(--accent-600)',
                         }}
                       >
                         <Store className="h-2.5 w-2.5" />
@@ -258,11 +289,18 @@ function InstalledTab({
                 <div className="flex items-center gap-3">
                   <Badge
                     style={{
-                      background: isEnabled ? 'var(--success-100)' : 'var(--bg-elevated)',
-                      color: isEnabled ? 'var(--success-800)' : 'var(--text-muted)',
-                      borderRadius: 'var(--radius-sm)',
+                      background: isEnabled ? 'color-mix(in srgb, var(--success-500) 12%, transparent)' : 'var(--bg-elevated)',
+                      color: isEnabled ? 'var(--success-700)' : 'var(--text-muted)',
+                      borderRadius: 'var(--radius-md)',
                     }}
                   >
+                    <span
+                      className="inline-block h-1.5 w-1.5 rounded-full mr-1.5"
+                      style={{
+                        background: isEnabled ? 'var(--success-500)' : 'var(--text-muted)',
+                        boxShadow: isEnabled ? '0 0 6px var(--success-500)' : 'none',
+                      }}
+                    />
                     {isEnabled ? 'enabled' : 'disabled'}
                   </Badge>
                   <Switch
@@ -330,18 +368,19 @@ function MarketplaceTab({
             <Badge
               key={mp}
               variant="secondary"
-              className="text-xs flex items-center gap-1"
+              className="text-xs flex items-center gap-1 transition-all hover:scale-[1.05]"
               style={{
                 borderRadius: 'var(--radius-md)',
-                background: 'var(--bg-elevated)',
+                background: 'color-mix(in srgb, var(--brand-500) 8%, transparent)',
                 color: 'var(--text-secondary)',
+                border: '1px solid color-mix(in srgb, var(--brand-500) 20%, transparent)',
               }}
             >
-              <Store className="h-3 w-3" />
+              <Store className="h-3 w-3" style={{ color: 'var(--brand-500)' }} />
               {mp}
               <span
                 className="ml-1 font-semibold"
-                style={{ color: 'var(--text-primary)' }}
+                style={{ color: 'var(--brand-500)' }}
               >
                 ({marketplaces.get(mp)?.length ?? 0})
               </span>
@@ -356,11 +395,10 @@ function MarketplaceTab({
           return (
             <Card
               key={plugin.name}
-              className="relative cursor-pointer hover:scale-[1.02] transition-transform"
+              className="card-premium relative cursor-pointer transition-all hover:scale-[1.03]"
               style={{
-                background: 'var(--bg-card)',
-                borderColor: isInstalled ? 'var(--brand-500)' : 'var(--border-subtle)',
                 borderRadius: 'var(--radius-xl)',
+                borderColor: isInstalled ? 'var(--brand-500)' : undefined,
               }}
             >
               <CardContent className="p-4 text-center">
@@ -372,10 +410,20 @@ function MarketplaceTab({
                     />
                   </div>
                 )}
-                <Puzzle
-                  className="h-8 w-8 mx-auto mb-2"
-                  style={{ color: isInstalled ? 'var(--icon-plugin, var(--brand-500))' : 'var(--text-muted)' }}
-                />
+                <div
+                  className="flex h-12 w-12 items-center justify-center mx-auto mb-3"
+                  style={{
+                    background: isInstalled
+                      ? 'color-mix(in srgb, var(--brand-500) 12%, transparent)'
+                      : 'color-mix(in srgb, var(--text-muted) 8%, transparent)',
+                    borderRadius: 'var(--radius-lg)',
+                  }}
+                >
+                  <Puzzle
+                    className="h-6 w-6"
+                    style={{ color: isInstalled ? 'var(--brand-500)' : 'var(--text-muted)' }}
+                  />
+                </div>
                 <p className="font-medium text-sm" style={{ color: 'var(--text-primary)' }}>
                   {plugin.name}
                 </p>
@@ -385,9 +433,11 @@ function MarketplaceTab({
                 <Badge
                   className="mt-2 text-[10px]"
                   style={{
-                    background: isInstalled ? 'var(--success-100)' : 'var(--bg-elevated)',
-                    color: isInstalled ? 'var(--success-800)' : 'var(--text-muted)',
-                    borderRadius: 'var(--radius-sm)',
+                    background: isInstalled
+                      ? 'color-mix(in srgb, var(--success-500) 12%, transparent)'
+                      : 'var(--bg-elevated)',
+                    color: isInstalled ? 'var(--success-700)' : 'var(--text-muted)',
+                    borderRadius: 'var(--radius-md)',
                   }}
                 >
                   {isInstalled ? 'installed' : 'available'}
@@ -431,24 +481,33 @@ function BlockedTab({
       {filtered.map((name) => (
         <Card
           key={name}
+          className="card-premium transition-all hover:scale-[1.01]"
           style={{
-            background: 'var(--bg-card)',
-            borderColor: 'var(--border-subtle)',
-            borderRadius: 'var(--radius-lg)',
+            borderRadius: 'var(--radius-xl)',
+            borderLeft: '3px solid var(--error-500)',
           }}
         >
           <CardContent className="p-4 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <Ban className="h-4 w-4" style={{ color: 'var(--error-500)' }} />
-              <span style={{ color: 'var(--text-secondary)' }}>{name}</span>
+              <div
+                className="flex h-9 w-9 items-center justify-center"
+                style={{
+                  background: 'color-mix(in srgb, var(--error-500) 12%, transparent)',
+                  borderRadius: 'var(--radius-lg)',
+                }}
+              >
+                <Shield className="h-4 w-4" style={{ color: 'var(--error-500)' }} />
+              </div>
+              <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>{name}</span>
             </div>
             <Badge
               style={{
-                background: 'var(--error-100)',
-                color: 'var(--error-800)',
-                borderRadius: 'var(--radius-sm)',
+                background: 'color-mix(in srgb, var(--error-500) 12%, transparent)',
+                color: 'var(--error-700)',
+                borderRadius: 'var(--radius-md)',
               }}
             >
+              <Ban className="h-2.5 w-2.5 mr-1" />
               blocked
             </Badge>
           </CardContent>
@@ -531,25 +590,91 @@ export default function Plugins() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-            Plugins
-          </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>
-            Manage Claude Code plugins and extensions
-          </p>
+      <div
+        className="flex items-center justify-between p-4 rounded-2xl"
+        style={{
+          background: 'color-mix(in srgb, var(--bg-card) 80%, transparent)',
+          backdropFilter: 'blur(8px)',
+          border: '1px solid var(--border-subtle)',
+          borderRadius: 'var(--radius-xl)',
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-11 w-11 items-center justify-center animate-float"
+            style={{
+              background: 'color-mix(in srgb, var(--brand-500) 12%, transparent)',
+              borderRadius: 'var(--radius-lg)',
+            }}
+          >
+            <Sparkles className="h-5 w-5" style={{ color: 'var(--brand-500)' }} />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold" style={gradientTextStyle}>
+              Plugins
+            </h1>
+            <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
+              Manage Claude Code plugins and extensions
+            </p>
+          </div>
         </div>
         <Button
           variant="outline"
           size="sm"
           onClick={handleRefresh}
           disabled={isFetching}
+          className="transition-all hover:scale-[1.05]"
           style={{ borderRadius: 'var(--radius-md)' }}
         >
           <RefreshCw className={`h-4 w-4 mr-2 ${isFetching ? 'animate-spin' : ''}`} />
           Refresh
         </Button>
+      </div>
+
+      {/* Stats strip */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="card-premium transition-all hover:scale-[1.02]" style={{ borderRadius: 'var(--radius-xl)' }}>
+          <CardContent className="p-3 flex items-center gap-3">
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center"
+              style={{ background: 'color-mix(in srgb, var(--brand-500) 12%, transparent)', borderRadius: 'var(--radius-lg)' }}
+            >
+              <Package className="h-4 w-4" style={{ color: 'var(--brand-500)' }} />
+            </div>
+            <div>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Installed</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{plugins.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="card-premium transition-all hover:scale-[1.02]" style={{ borderRadius: 'var(--radius-xl)' }}>
+          <CardContent className="p-3 flex items-center gap-3">
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center"
+              style={{ background: 'color-mix(in srgb, var(--success-500) 12%, transparent)', borderRadius: 'var(--radius-lg)' }}
+            >
+              <Zap className="h-4 w-4" style={{ color: 'var(--success-500)' }} />
+            </div>
+            <div>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Enabled</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{enabledPlugins.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="card-premium transition-all hover:scale-[1.02]" style={{ borderRadius: 'var(--radius-xl)' }}>
+          <CardContent className="p-3 flex items-center gap-3">
+            <div
+              className="flex h-9 w-9 shrink-0 items-center justify-center"
+              style={{ background: 'color-mix(in srgb, var(--error-500) 12%, transparent)', borderRadius: 'var(--radius-lg)' }}
+            >
+              <Shield className="h-4 w-4" style={{ color: 'var(--error-500)' }} />
+            </div>
+            <div>
+              <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Blocked</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{blockedPlugins.length}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Search */}
@@ -574,7 +699,13 @@ export default function Plugins() {
 
       {/* Tabs */}
       <Tabs defaultValue="installed" className="space-y-4">
-        <TabsList style={{ background: 'var(--bg-card)', borderRadius: 'var(--radius-lg)' }}>
+        <TabsList
+          style={{
+            background: 'color-mix(in srgb, var(--bg-card) 80%, transparent)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: 'var(--radius-lg)',
+          }}
+        >
           <TabsTrigger value="installed">
             <Puzzle className="h-4 w-4 mr-2" />
             Installed
@@ -582,7 +713,7 @@ export default function Plugins() {
               variant="secondary"
               className="ml-2 text-[10px] px-1.5 py-0"
               style={{
-                borderRadius: 'var(--radius-xs)',
+                borderRadius: 'var(--radius-md)',
                 background: 'var(--bg-elevated)',
                 color: 'var(--text-muted)',
               }}
@@ -597,7 +728,7 @@ export default function Plugins() {
               variant="secondary"
               className="ml-2 text-[10px] px-1.5 py-0"
               style={{
-                borderRadius: 'var(--radius-xs)',
+                borderRadius: 'var(--radius-md)',
                 background: 'var(--bg-elevated)',
                 color: 'var(--text-muted)',
               }}
@@ -613,9 +744,9 @@ export default function Plugins() {
                 variant="secondary"
                 className="ml-2 text-[10px] px-1.5 py-0"
                 style={{
-                  borderRadius: 'var(--radius-xs)',
-                  background: 'var(--error-100)',
-                  color: 'var(--error-800)',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'color-mix(in srgb, var(--error-500) 12%, transparent)',
+                  color: 'var(--error-700)',
                 }}
               >
                 {blockedPlugins.length}
