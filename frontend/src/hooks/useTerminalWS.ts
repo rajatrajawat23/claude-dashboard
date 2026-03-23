@@ -45,8 +45,12 @@ export function useTerminalWS({
     if (!terminalId) return;
 
     setConnecting(true);
+    // In dev mode (port 3000), connect directly to backend (port 8080)
+    // In production, use same host
+    const isDev = window.location.port === '3000';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/terminals/${terminalId}`;
+    const host = isDev ? `${window.location.hostname}:8080` : window.location.host;
+    const wsUrl = `${protocol}//${host}/ws/terminals/${terminalId}`;
 
     const ws = new WebSocket(wsUrl);
     wsRef.current = ws;
