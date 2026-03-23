@@ -7,6 +7,7 @@ interface ThemeState {
   sidebarVariant: SidebarVariant;
   radiusMultiplier: number;
   sidebarCollapsed: boolean;
+  themePresetId: string | null;
 
   setMode: (mode: 'light' | 'dark' | 'system') => void;
   toggleMode: () => void;
@@ -14,6 +15,7 @@ interface ThemeState {
   setRadiusMultiplier: (multiplier: number) => void;
   toggleSidebar: () => void;
   setSidebarCollapsed: (collapsed: boolean) => void;
+  setThemePreset: (id: string | null) => void;
 }
 
 export const useThemeStore = create<ThemeState>()(
@@ -23,6 +25,7 @@ export const useThemeStore = create<ThemeState>()(
       sidebarVariant: 'standard',
       radiusMultiplier: 1.0,
       sidebarCollapsed: false,
+      themePresetId: null,
 
       setMode: (mode) => set({ mode }),
       toggleMode: () => {
@@ -40,6 +43,7 @@ export const useThemeStore = create<ThemeState>()(
       toggleSidebar: () =>
         set((s) => ({ sidebarCollapsed: !s.sidebarCollapsed })),
       setSidebarCollapsed: (sidebarCollapsed) => set({ sidebarCollapsed }),
+      setThemePreset: (themePresetId) => set({ themePresetId }),
     }),
     {
       name: 'claude-dashboard-theme',

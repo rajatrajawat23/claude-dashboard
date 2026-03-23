@@ -8,3 +8,5 @@ export { sidebarVariants } from './sidebar-variants';
 export type { SidebarVariant, SidebarConfig } from './sidebar-variants';
 export { createTokens } from './tokens';
 export type { ThemeTokens } from './tokens';
+export { themePresets } from './themes';
+export type { ThemePreset } from './themes';

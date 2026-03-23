@@ -1,11 +1,16 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useThemeStore } from '@/stores/themeStore';
-import { sidebarVariants } from '@/theme';
+import { sidebarVariants, themePresets } from '@/theme';
 import type { SidebarVariant } from '@/theme';
-import { Sun, Moon, Monitor } from 'lucide-react';
+import { Sun, Moon, Monitor, RotateCcw, Check } from 'lucide-react';
 
 export default function ThemeStudio() {
-  const { mode, setMode, sidebarVariant, setSidebarVariant, radiusMultiplier, setRadiusMultiplier } = useThemeStore();
+  const {
+    mode, setMode,
+    sidebarVariant, setSidebarVariant,
+    radiusMultiplier, setRadiusMultiplier,
+    themePresetId, setThemePreset,
+  } = useThemeStore();
 
   return (
     <div className="space-y-6">
@@ -13,6 +18,105 @@ export default function ThemeStudio() {
         <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>Theme Studio</h1>
         <p className="text-sm mt-1" style={{ color: 'var(--text-muted)' }}>Customize the dashboard appearance</p>
       </div>
+
+      {/* Theme Presets */}
+      <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base" style={{ color: 'var(--text-primary)' }}>Theme Presets</CardTitle>
+          {themePresetId && (
+            <button
+              onClick={() => setThemePreset(null)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all"
+              style={{
+                background: 'var(--bg-elevated)',
+                color: 'var(--text-secondary)',
+                borderRadius: 'var(--radius-lg)',
+              }}
+            >
+              <RotateCcw className="h-3 w-3" />
+              Reset to default
+            </button>
+          )}
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+            {themePresets.map((preset) => {
+              const isActive = themePresetId === preset.id;
+              const previewColors = [
+                preset.accentScale[300],
+                preset.accentScale[400],
+                preset.accentScale[500],
+                preset.accentScale[600],
+                preset.accentScale[700],
+              ];
+
+              return (
+                <button
+                  key={preset.id}
+                  onClick={() => setThemePreset(isActive ? null : preset.id)}
+                  className="relative p-4 text-left transition-all border-2"
+                  style={{
+                    background: isActive ? 'var(--bg-active)' : 'var(--bg-elevated)',
+                    borderColor: isActive ? preset.accent : 'transparent',
+                    borderRadius: 'var(--radius-xl)',
+                  }}
+                >
+                  {/* Active indicator */}
+                  {isActive && (
+                    <div
+                      className="absolute top-2 right-2 flex items-center justify-center w-5 h-5 rounded-full"
+                      style={{ background: preset.accent }}
+                    >
+                      <Check className="h-3 w-3 text-white" />
+                    </div>
+                  )}
+
+                  {/* Theme name */}
+                  <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                    {preset.name}
+                  </p>
+
+                  {/* Description */}
+                  <p className="text-xs mt-0.5 leading-snug" style={{ color: 'var(--text-muted)' }}>
+                    {preset.description}
+                  </p>
+
+                  {/* Mode badge */}
+                  <span
+                    className="inline-flex items-center gap-1 mt-2 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide rounded-full"
+                    style={{
+                      background: preset.mode === 'dark'
+                        ? 'rgba(0,0,0,0.3)'
+                        : 'rgba(255,255,255,0.6)',
+                      color: preset.mode === 'dark'
+                        ? 'rgba(255,255,255,0.7)'
+                        : 'rgba(0,0,0,0.6)',
+                    }}
+                  >
+                    {preset.mode === 'dark' ? (
+                      <Moon className="h-2.5 w-2.5" />
+                    ) : (
+                      <Sun className="h-2.5 w-2.5" />
+                    )}
+                    {preset.mode}
+                  </span>
+
+                  {/* Color preview strip */}
+                  <div className="flex gap-1 mt-3">
+                    {previewColors.map((color, i) => (
+                      <div
+                        key={i}
+                        className="h-3 flex-1 rounded-sm"
+                        style={{ background: color, borderRadius: 'var(--radius-xs)' }}
+                      />
+                    ))}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Theme Mode */}
       <Card style={{ background: 'var(--bg-card)', borderColor: 'var(--border-subtle)', borderRadius: 'var(--radius-xl)' }}>
