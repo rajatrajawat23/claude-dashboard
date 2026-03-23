@@ -7,6 +7,7 @@ import (
 	"github.com/claude-dashboard/backend/internal/handlers"
 	"github.com/claude-dashboard/backend/internal/services"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/websocket/v2"
 	"gorm.io/gorm"
 )
 
@@ -51,6 +52,24 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	api.Get("/git/commits", git.Commits)
 	api.Get("/git/worktrees", git.Worktrees)
 
+	// Terminals (real PTY - no DB needed)
+	termManager := services.NewTerminalManager()
+	terminals := handlers.NewTerminalHandler(termManager)
+	api.Get("/terminals", terminals.List)
+	api.Get("/terminals/tree", terminals.GetTree)
+	api.Post("/terminals", terminals.Create)
+	api.Get("/terminals/:id", terminals.Get)
+	api.Get("/terminals/:id/children", terminals.GetChildren)
+	api.Delete("/terminals/:id", terminals.Remove)
+	api.Post("/terminals/:id/kill", terminals.Kill)
+	api.Post("/terminals/:id/resize", terminals.Resize)
+	api.Put("/terminals/:id/rename", terminals.Rename)
+	api.Post("/terminals/:id/restart", terminals.Restart)
+
+	// Terminal WebSocket
+	app.Use("/ws/terminals/:id", terminals.WebSocketUpgrade)
+	app.Get("/ws/terminals/:id", websocket.New(terminals.WebSocket))
+
 	// DB-dependent routes (only register if DB is available)
 	if db != nil {
 		// DB Settings (CRUD in database)
@@ -67,14 +86,6 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 		api.Get("/sessions/:id", sessions.Get)
 		api.Get("/sessions/:id/messages", sessions.GetMessages)
 		api.Delete("/sessions/:id", sessions.Archive)
-
-		// Terminals
-		terminals := handlers.NewTerminalHandler(db)
-		api.Get("/terminals", terminals.List)
-		api.Post("/terminals", terminals.Create)
-		api.Get("/terminals/:id", terminals.Get)
-		api.Delete("/terminals/:id", terminals.Close)
-		api.Post("/terminals/:id/resize", terminals.Resize)
 
 		// Plugin toggle (needs DB)
 		api.Put("/plugins/:id/toggle", plugins.Toggle)
@@ -101,7 +112,6 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 		}
 		api.Get("/settings", dbUnavailable)
 		api.Get("/sessions", dbUnavailable)
-		api.Get("/terminals", dbUnavailable)
 		api.Get("/theme", dbUnavailable)
 		api.Get("/tasks", dbUnavailable)
 	}
