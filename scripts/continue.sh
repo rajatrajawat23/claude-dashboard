@@ -135,15 +135,15 @@ fi
 # ─── 7. Check Implementation Progress ───
 header "Implementation Progress"
 
-# Phase tracking
-declare -A PHASES
-PHASES[1]="SDLC Documentation"
-PHASES[2]="Project Scaffolding"
-PHASES[3]="Theming Engine"
-PHASES[4]="Backend API + DB"
-PHASES[5]="Frontend Core"
-PHASES[6]="Feature Pages"
-PHASES[7]="Continuation Script"
+# Phase tracking - portable (no associative arrays needed)
+phase_name() {
+    case $1 in
+        1) echo "SDLC Documentation" ;; 2) echo "Project Scaffolding" ;;
+        3) echo "Theming Engine" ;; 4) echo "Backend API + DB" ;;
+        5) echo "Frontend Core" ;; 6) echo "Feature Pages" ;;
+        7) echo "Continuation Script" ;;
+    esac
+}
 
 check_phase() {
     local phase=$1
@@ -151,22 +151,23 @@ check_phase() {
         1) [ -f "$PROJECT_DIR/docs/05-IMPLEMENTATION-PLAN.md" ] && echo "done" || echo "pending" ;;
         2) [ -f "$PROJECT_DIR/frontend/package.json" ] && [ -f "$PROJECT_DIR/backend/go.mod" ] && echo "done" || echo "pending" ;;
         3) [ -f "$PROJECT_DIR/frontend/src/theme/colors.ts" ] && echo "done" || echo "pending" ;;
-        4) [ $(find "$PROJECT_DIR/backend/internal/handlers" -name "*.go" 2>/dev/null | wc -l) -gt 2 ] && echo "done" || echo "pending" ;;
-        5) [ $(find "$PROJECT_DIR/frontend/src/pages" -name "*.tsx" 2>/dev/null | wc -l) -gt 2 ] && echo "done" || echo "pending" ;;
-        6) [ $(find "$PROJECT_DIR/frontend/src/pages" -name "*.tsx" 2>/dev/null | wc -l) -gt 10 ] && echo "done" || echo "pending" ;;
+        4) [ "$(find "$PROJECT_DIR/backend/internal/handlers" -name "*.go" 2>/dev/null | wc -l | tr -d ' ')" -gt 2 ] && echo "done" || echo "pending" ;;
+        5) [ "$(find "$PROJECT_DIR/frontend/src/pages" -name "*.tsx" 2>/dev/null | wc -l | tr -d ' ')" -gt 2 ] && echo "done" || echo "pending" ;;
+        6) [ "$(find "$PROJECT_DIR/frontend/src/pages" -name "*.tsx" 2>/dev/null | wc -l | tr -d ' ')" -gt 10 ] && echo "done" || echo "pending" ;;
         7) [ -f "$PROJECT_DIR/scripts/continue.sh" ] && echo "done" || echo "pending" ;;
     esac
 }
 
 TOTAL=7
 COMPLETED=0
-for i in $(seq 1 7); do
+for i in 1 2 3 4 5 6 7; do
     STATUS=$(check_phase $i)
+    PNAME=$(phase_name $i)
     if [ "$STATUS" = "done" ]; then
-        success "Phase $i: ${PHASES[$i]} ✓"
-        ((COMPLETED++))
+        success "Phase $i: $PNAME"
+        COMPLETED=$((COMPLETED + 1))
     else
-        warn "Phase $i: ${PHASES[$i]} ○"
+        warn "Phase $i: $PNAME"
     fi
 done
 
@@ -217,7 +218,7 @@ echo ""
 
 if [ "$PROGRESS" -lt 100 ]; then
     NEXT_PHASE=""
-    for i in $(seq 1 7); do
+    for i in 1 2 3 4 5 6 7; do
         if [ "$(check_phase $i)" = "pending" ]; then
             NEXT_PHASE=$i
             break
@@ -225,16 +226,17 @@ if [ "$PROGRESS" -lt 100 ]; then
     done
 
     if [ -n "$NEXT_PHASE" ]; then
-        echo -e "Next: ${YELLOW}Phase $NEXT_PHASE - ${PHASES[$NEXT_PHASE]}${NC}"
+        NEXT_NAME=$(phase_name $NEXT_PHASE)
+        echo -e "Next: ${YELLOW}Phase $NEXT_PHASE - $NEXT_NAME${NC}"
         echo ""
         echo "To continue, run Claude Code in the project directory:"
         echo -e "  ${CYAN}cd $PROJECT_DIR && claude${NC}"
         echo ""
         echo "Then tell Claude:"
-        echo -e "  ${CYAN}\"Continue from Phase $NEXT_PHASE - ${PHASES[$NEXT_PHASE]}. Check docs/05-IMPLEMENTATION-PLAN.md and .claude/progress.json for context.\"${NC}"
+        echo -e "  ${CYAN}\"Continue from Phase $NEXT_PHASE - $NEXT_NAME. Check docs/05-IMPLEMENTATION-PLAN.md and .claude/progress.json for context.\"${NC}"
     fi
 else
-    success "All phases complete! 🎉"
+    success "All phases complete!"
 fi
 
 echo ""
