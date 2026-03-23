@@ -2,7 +2,72 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
+/* ================================================================
+   CLAUDE DASHBOARD - MASTER THEME
+   200 colors + 40+40 shades + dynamic radius + typography
+   ================================================================ */
+
+@layer base {
+  :root {
+    /* -- Mode -- */
+    --theme-mode: light;
+
+    /* -- Light Shades (default) -- */
+    --shade-1: #ffffff; --shade-2: #fefefe; --shade-3: #fdfdfd; --shade-4: #fcfcfc;
+    --shade-5: #fafafa; --shade-6: #f8f8f9; --shade-7: #f6f6f8; --shade-8: #f4f4f7;
+    --shade-9: #f2f2f6; --shade-10: #f0f0f5; --shade-11: #ededf2; --shade-12: #eaeaf0;
+    --shade-13: #e7e7ee; --shade-14: #e4e4ec; --shade-15: #e1e1ea; --shade-16: #dddde7;
+    --shade-17: #d9d9e4; --shade-18: #d5d5e1; --shade-19: #d1d1de; --shade-20: #cdcddb;
+    --shade-21: #c5c5d4; --shade-22: #bdbdcd; --shade-23: #b5b5c6; --shade-24: #adadbf;
+    --shade-25: #a5a5b8; --shade-26: #9d9db1; --shade-27: #9595aa; --shade-28: #8d8da3;
+    --shade-29: #85859c; --shade-30: #7d7d95; --shade-31: #71718a; --shade-32: #65657f;
+    --shade-33: #595974; --shade-34: #4d4d69; --shade-35: #41415e; --shade-36: #363652;
+    --shade-37: #2b2b46; --shade-38: #20203a; --shade-39: #15152e; --shade-40: #0a0a22;
+
+    /* -- Brand -- */
+    --brand-50: #eef2ff; --brand-100: #dbe4ff; --brand-200: #bac8ff; --brand-300: #91a7ff;
+    --brand-400: #748ffc; --brand-500: #5c7cfa; --brand-600: #4c6ef5; --brand-700: #4263eb;
+    --brand-800: #3b5bdb; --brand-900: #364fc7;
+
+    /* -- Accent -- */
+    --accent-50: #fff0f6; --accent-100: #ffdeeb; --accent-200: #fcc2d7; --accent-300: #faa2c1;
+    --accent-400: #f783ac; --accent-500: #f06595; --accent-600: #e64980; --accent-700: #d6336c;
+    --accent-800: #c2255c; --accent-900: #a61e4d;
+
+    /* -- Success -- */
+    --success-50: #ebfbee; --success-100: #d3f9d8; --success-200: #b2f2bb; --success-300: #8ce99a;
+    --success-400: #69db7c; --success-500: #51cf66; --success-600: #40c057; --success-700: #37b24d;
+    --success-800: #2f9e44; --success-900: #2b8a3e;
+
+    /* -- Warning -- */
+    --warning-50: #fff9db; --warning-100: #fff3bf; --warning-200: #ffec99; --warning-300: #ffe066;
+    --warning-400: #ffd43b; --warning-500: #fcc419; --warning-600: #fab005; --warning-700: #f59f00;
+    --warning-800: #f08c00; --warning-900: #e67700;
+
+    /* -- Error -- */
+    --error-50: #fff5f5; --error-100: #ffe3e3; --error-200: #ffc9c9; --error-300: #ffa8a8;
+    --error-400: #ff8787; --error-500: #ff6b6b; --error-600: #fa5252; --error-700: #f03e3e;
+    --error-800: #e03131; --error-900: #c92a2a;
+
+    /* -- Info -- */
+    --info-50: #e7f5ff; --info-100: #d0ebff; --info-200: #a5d8ff; --info-300: #74c0fc;
+    --info-400: #4dabf7; --info-500: #339af0; --info-600: #228be6; --info-700: #1c7ed6;
+    --info-800: #1971c2; --info-900: #1864ab;
+
+    /* -- Semantic -- */
+    --bg-primary: var(--shade-1);
+    --bg-secondary: var(--shade-5);
+    --bg-card: var(--shade-10);
+    --bg-elevated: var(--shade-15);
+    --bg-active: var(--shade-20);
+    --border-default: var(--shade-25);
+    --border-subtle: var(--shade-15);
+    --border-strong: var(--shade-30);
+    --text-primary: var(--shade-40);
+    --text-secondary: var(--shade-35);
+    --text-muted: var(--shade-30);
+
+    /* -- Sidebar (shadcn compatible) -- */
     --sidebar: hsl(0 0% 98%);
     --sidebar-foreground: hsl(240 5.3% 26.1%);
     --sidebar-primary: hsl(240 5.9% 10%);
@@ -11,9 +76,62 @@
     --sidebar-accent-foreground: hsl(240 5.9% 10%);
     --sidebar-border: hsl(220 13% 91%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
-}
 
-.dark {
+    /* -- Sidebar (theme system) -- */
+    --sidebar-bg: var(--shade-5);
+    --sidebar-bg-hover: var(--shade-10);
+    --sidebar-bg-active: var(--shade-15);
+    --sidebar-text: var(--shade-35);
+    --sidebar-text-active: var(--shade-40);
+    --sidebar-icon: var(--shade-30);
+    --sidebar-icon-active: var(--brand-500);
+
+    /* -- Dynamic Radius -- */
+    --radius-multiplier: 1;
+    --radius-none: 0px;
+    --radius-xs: calc(2px * var(--radius-multiplier));
+    --radius-sm: calc(4px * var(--radius-multiplier));
+    --radius-md: calc(6px * var(--radius-multiplier));
+    --radius-default: calc(8px * var(--radius-multiplier));
+    --radius-lg: calc(10px * var(--radius-multiplier));
+    --radius-xl: calc(12px * var(--radius-multiplier));
+    --radius-2xl: calc(16px * var(--radius-multiplier));
+    --radius-3xl: calc(20px * var(--radius-multiplier));
+    --radius-4xl: calc(24px * var(--radius-multiplier));
+    --radius-full: 9999px;
+
+    /* -- Typography -- */
+    --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    --font-mono: "SF Mono", "Fira Code", "JetBrains Mono", Menlo, monospace;
+
+    /* -- Transitions -- */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-normal: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* -- Glass -- */
+    --glass-light: rgba(255,255,255,0.08);
+    --glass-medium: rgba(255,255,255,0.12);
+    --glass-heavy: rgba(255,255,255,0.18);
+    --glass-border: rgba(255,255,255,0.06);
+  }
+
+  .dark {
+    --theme-mode: dark;
+
+    --shade-1: #0a0a0b; --shade-2: #0d0d0f; --shade-3: #101013; --shade-4: #131316;
+    --shade-5: #16161a; --shade-6: #191920; --shade-7: #1c1c24; --shade-8: #1f1f28;
+    --shade-9: #22222c; --shade-10: #252530; --shade-11: #282835; --shade-12: #2b2b3a;
+    --shade-13: #2e2e3f; --shade-14: #313144; --shade-15: #343449; --shade-16: #37374e;
+    --shade-17: #3a3a53; --shade-18: #3d3d58; --shade-19: #40405d; --shade-20: #434362;
+    --shade-21: #4a4a6a; --shade-22: #515172; --shade-23: #58587a; --shade-24: #5f5f82;
+    --shade-25: #66668a; --shade-26: #6d6d92; --shade-27: #74749a; --shade-28: #7b7ba2;
+    --shade-29: #8282aa; --shade-30: #8989b2; --shade-31: #9494ba; --shade-32: #9f9fc2;
+    --shade-33: #aaaaca; --shade-34: #b5b5d2; --shade-35: #c0c0da; --shade-36: #cbcbe2;
+    --shade-37: #d6d6ea; --shade-38: #e1e1f2; --shade-39: #ececfa; --shade-40: #f7f7ff;
+
+    /* -- Sidebar (shadcn compatible, dark) -- */
     --sidebar: hsl(240 5.9% 10%);
     --sidebar-foreground: hsl(240 4.8% 95.9%);
     --sidebar-primary: hsl(224.3 76.3% 48%);
@@ -22,15 +140,33 @@
     --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
     --sidebar-border: hsl(240 3.7% 15.9%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
+
+    --glass-light: rgba(255,255,255,0.04);
+    --glass-medium: rgba(255,255,255,0.08);
+    --glass-heavy: rgba(255,255,255,0.12);
+    --glass-border: rgba(255,255,255,0.04);
+  }
+
+  * {
+    border-color: var(--border-subtle);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
 }
 
 @theme inline {
-    --color-sidebar: var(--sidebar);
-    --color-sidebar-foreground: var(--sidebar-foreground);
-    --color-sidebar-primary: var(--sidebar-primary);
-    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-    --color-sidebar-accent: var(--sidebar-accent);
-    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-    --color-sidebar-border: var(--sidebar-border);
-    --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
