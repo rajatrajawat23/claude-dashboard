@@ -209,9 +209,34 @@ func (b *ClaudeBridge) ListPlugins() ([]PluginInfo, error) {
 		return nil, err
 	}
 
-	var plugins []PluginInfo
-	if err := json.Unmarshal(data, &plugins); err != nil {
+	// Format: { "version": 2, "plugins": { "name@marketplace": [{ "version": "...", "installedAt": "..." }] } }
+	var raw struct {
+		Plugins map[string][]struct {
+			Version     string `json:"version"`
+			InstalledAt string `json:"installedAt"`
+			Scope       string `json:"scope"`
+		} `json:"plugins"`
+	}
+	if err := json.Unmarshal(data, &raw); err != nil {
 		return nil, err
+	}
+
+	var plugins []PluginInfo
+	for key, entries := range raw.Plugins {
+		parts := strings.SplitN(key, "@", 2)
+		name := parts[0]
+		marketplace := ""
+		if len(parts) > 1 {
+			marketplace = parts[1]
+		}
+		for _, e := range entries {
+			plugins = append(plugins, PluginInfo{
+				Name:        name,
+				Version:     e.Version,
+				Marketplace: marketplace,
+				InstalledAt: e.InstalledAt,
+			})
+		}
 	}
 	return plugins, nil
 }

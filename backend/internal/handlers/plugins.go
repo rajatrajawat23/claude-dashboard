@@ -25,11 +25,16 @@ func (h *PluginHandler) List(c *fiber.Ctx) error {
 	}
 
 	// Fallback to DB
-	var dbPlugins []models.Plugin
-	if err := h.DB.Find(&dbPlugins).Error; err != nil {
-		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	if h.DB != nil {
+		var dbPlugins []models.Plugin
+		if err := h.DB.Find(&dbPlugins).Error; err != nil {
+			return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+		}
+		return c.JSON(fiber.Map{"data": dbPlugins, "source": "database"})
 	}
-	return c.JSON(fiber.Map{"data": dbPlugins, "source": "database"})
+
+	// No DB and bridge failed - return empty list with the error
+	return c.JSON(fiber.Map{"data": []interface{}{}, "source": "none", "error": err.Error()})
 }
 
 func (h *PluginHandler) Toggle(c *fiber.Ctx) error {
