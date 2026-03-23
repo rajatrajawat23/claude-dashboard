@@ -15,42 +15,19 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 
 	api := app.Group("/api/v1")
 
-	// Health & System
+	// Health & System (always available)
 	health := handlers.NewHealthHandler(db)
 	api.Get("/health", health.HealthCheck)
 	api.Get("/system/info", health.SystemInfo)
 
-	// DB Settings (CRUD in database)
-	settings := handlers.NewSettingsHandler(db, cfg)
-	api.Get("/settings", settings.GetAll)
-	api.Get("/settings/scope/:scope", settings.GetByScope)
-	api.Put("/settings/:id", settings.Update)
-	api.Get("/settings/:id/history", settings.GetHistory)
-
-	// Claude Live Settings (reads from ~/.claude/)
+	// Claude Live Settings (reads from ~/.claude/ - no DB needed)
 	claudeSettings := handlers.NewClaudeSettingsHandler(bridge)
 	api.Get("/claude/settings/global", claudeSettings.GetGlobalSettings)
 	api.Get("/claude/settings/local", claudeSettings.GetLocalSettings)
 	api.Put("/claude/settings/global", claudeSettings.UpdateGlobalSettings)
 	api.Put("/claude/settings/local", claudeSettings.UpdateLocalSettings)
 
-	// Sessions
-	sessions := handlers.NewSessionHandler(db)
-	api.Get("/sessions", sessions.List)
-	api.Get("/sessions/tree", sessions.GetTree)
-	api.Get("/sessions/:id", sessions.Get)
-	api.Get("/sessions/:id/messages", sessions.GetMessages)
-	api.Delete("/sessions/:id", sessions.Archive)
-
-	// Terminals
-	terminals := handlers.NewTerminalHandler(db)
-	api.Get("/terminals", terminals.List)
-	api.Post("/terminals", terminals.Create)
-	api.Get("/terminals/:id", terminals.Get)
-	api.Delete("/terminals/:id", terminals.Close)
-	api.Post("/terminals/:id/resize", terminals.Resize)
-
-	// Memory (reads from ~/.claude/memory/)
+	// Memory (reads from ~/.claude/memory/ - no DB needed)
 	memory := handlers.NewMemoryHandler(bridge)
 	api.Get("/memory", memory.List)
 	api.Get("/memory/:name", memory.Get)
@@ -58,12 +35,11 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	api.Put("/memory/:name", memory.Update)
 	api.Delete("/memory/:name", memory.Delete)
 
-	// Plugins
+	// Plugins (tries filesystem first, falls back to DB)
 	plugins := handlers.NewPluginHandler(db, bridge)
 	api.Get("/plugins", plugins.List)
-	api.Put("/plugins/:id/toggle", plugins.Toggle)
 
-	// Git
+	// Git (shell commands - no DB needed)
 	cwd, _ := os.Getwd()
 	git := handlers.NewGitHandler(cwd)
 	api.Get("/git/status", git.Status)
@@ -71,16 +47,58 @@ func Setup(app *fiber.App, db *gorm.DB, cfg *config.Config) {
 	api.Get("/git/commits", git.Commits)
 	api.Get("/git/worktrees", git.Worktrees)
 
-	// Theme
-	theme := handlers.NewThemeHandler(db)
-	api.Get("/theme", theme.GetActive)
-	api.Put("/theme", theme.Save)
-	api.Get("/theme/presets", theme.ListPresets)
+	// DB-dependent routes (only register if DB is available)
+	if db != nil {
+		// DB Settings (CRUD in database)
+		settings := handlers.NewSettingsHandler(db, cfg)
+		api.Get("/settings", settings.GetAll)
+		api.Get("/settings/scope/:scope", settings.GetByScope)
+		api.Put("/settings/:id", settings.Update)
+		api.Get("/settings/:id/history", settings.GetHistory)
 
-	// Tasks
-	tasks := handlers.NewTaskHandler(db)
-	api.Get("/tasks", tasks.List)
-	api.Post("/tasks", tasks.Create)
-	api.Put("/tasks/:id", tasks.Update)
-	api.Delete("/tasks/:id", tasks.Delete)
+		// Sessions
+		sessions := handlers.NewSessionHandler(db)
+		api.Get("/sessions", sessions.List)
+		api.Get("/sessions/tree", sessions.GetTree)
+		api.Get("/sessions/:id", sessions.Get)
+		api.Get("/sessions/:id/messages", sessions.GetMessages)
+		api.Delete("/sessions/:id", sessions.Archive)
+
+		// Terminals
+		terminals := handlers.NewTerminalHandler(db)
+		api.Get("/terminals", terminals.List)
+		api.Post("/terminals", terminals.Create)
+		api.Get("/terminals/:id", terminals.Get)
+		api.Delete("/terminals/:id", terminals.Close)
+		api.Post("/terminals/:id/resize", terminals.Resize)
+
+		// Plugin toggle (needs DB)
+		api.Put("/plugins/:id/toggle", plugins.Toggle)
+
+		// Theme
+		theme := handlers.NewThemeHandler(db)
+		api.Get("/theme", theme.GetActive)
+		api.Put("/theme", theme.Save)
+		api.Get("/theme/presets", theme.ListPresets)
+
+		// Tasks
+		tasks := handlers.NewTaskHandler(db)
+		api.Get("/tasks", tasks.List)
+		api.Post("/tasks", tasks.Create)
+		api.Put("/tasks/:id", tasks.Update)
+		api.Delete("/tasks/:id", tasks.Delete)
+	} else {
+		// Return friendly message for DB-dependent routes when DB is unavailable
+		dbUnavailable := func(c *fiber.Ctx) error {
+			return c.Status(503).JSON(fiber.Map{
+				"error":   "Database not available",
+				"message": "Start PostgreSQL and restart the server to enable this endpoint",
+			})
+		}
+		api.Get("/settings", dbUnavailable)
+		api.Get("/sessions", dbUnavailable)
+		api.Get("/terminals", dbUnavailable)
+		api.Get("/theme", dbUnavailable)
+		api.Get("/tasks", dbUnavailable)
+	}
 }

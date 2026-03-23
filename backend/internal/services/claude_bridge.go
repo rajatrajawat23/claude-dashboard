@@ -16,9 +16,9 @@ func NewClaudeBridge(homePath string) *ClaudeBridge {
 }
 
 type ClaudeSettingsFile struct {
-	Permissions    map[string][]string      `json:"permissions"`
+	Permissions    json.RawMessage          `json:"permissions"`
 	McpServers     map[string]MCPServerConf `json:"mcpServers"`
-	EnabledPlugins []string                 `json:"enabledPlugins"`
+	EnabledPlugins json.RawMessage          `json:"enabledPlugins"`
 	Env            map[string]string        `json:"env"`
 }
 

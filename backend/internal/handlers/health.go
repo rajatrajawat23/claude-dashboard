@@ -14,25 +14,22 @@ func NewHealthHandler(db *gorm.DB) *HealthHandler {
 }
 
 func (h *HealthHandler) HealthCheck(c *fiber.Ctx) error {
-	sqlDB, err := h.DB.DB()
-	if err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"status":  "error",
-			"message": "Database connection failed",
-		})
-	}
+	dbStatus := "unavailable"
 
-	if err := sqlDB.Ping(); err != nil {
-		return c.Status(500).JSON(fiber.Map{
-			"status":  "error",
-			"message": "Database ping failed",
-		})
+	if h.DB != nil {
+		sqlDB, err := h.DB.DB()
+		if err == nil {
+			if err := sqlDB.Ping(); err == nil {
+				dbStatus = "connected"
+			}
+		}
 	}
 
 	return c.JSON(fiber.Map{
-		"status":  "healthy",
-		"service": "claude-dashboard-api",
-		"version": "1.0.0",
+		"status":   "healthy",
+		"service":  "claude-dashboard-api",
+		"version":  "1.0.0",
+		"database": dbStatus,
 	})
 }
 

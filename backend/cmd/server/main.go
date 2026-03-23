@@ -21,11 +21,12 @@ func main() {
 
 	db, err := database.Connect(cfg)
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
-	}
-
-	if err := database.AutoMigrate(db); err != nil {
-		log.Fatalf("Failed to run migrations: %v", err)
+		log.Printf("WARNING: Database not available: %v", err)
+		log.Println("Server will start without database - Claude file-based endpoints will still work")
+	} else {
+		if err := database.AutoMigrate(db); err != nil {
+			log.Printf("WARNING: Migration failed: %v", err)
+		}
 	}
 
 	app := fiber.New(fiber.Config{
