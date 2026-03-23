@@ -44,6 +44,8 @@ func (h *PluginHandler) Toggle(c *fiber.Ctx) error {
 	}
 
 	plugin.Enabled = !plugin.Enabled
-	h.DB.Save(&plugin)
+	if err := h.DB.Save(&plugin).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
 	return c.JSON(fiber.Map{"data": plugin})
 }

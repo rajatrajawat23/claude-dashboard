@@ -55,7 +55,9 @@ func (h *TaskHandler) Update(c *fiber.Ctx) error {
 		return c.Status(400).JSON(fiber.Map{"error": err.Error()})
 	}
 
-	h.DB.Model(&task).Updates(body)
+	if err := h.DB.Model(&task).Updates(body).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
 	return c.JSON(fiber.Map{"data": task})
 }
 
@@ -64,6 +66,8 @@ func (h *TaskHandler) Delete(c *fiber.Ctx) error {
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{"error": "Invalid ID"})
 	}
-	h.DB.Delete(&models.Task{}, id)
+	if err := h.DB.Delete(&models.Task{}, id).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
 	return c.JSON(fiber.Map{"message": "Task deleted"})
 }

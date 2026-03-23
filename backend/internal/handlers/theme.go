@@ -29,7 +29,9 @@ func (h *ThemeHandler) Save(c *fiber.Ctx) error {
 	}
 
 	// Deactivate all themes first
-	h.DB.Model(&models.Theme{}).Where("is_active = ?", true).Update("is_active", false)
+	if err := h.DB.Model(&models.Theme{}).Where("is_active = ?", true).Update("is_active", false).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to deactivate themes: " + err.Error()})
+	}
 
 	theme.IsActive = true
 	if err := h.DB.Save(&theme).Error; err != nil {

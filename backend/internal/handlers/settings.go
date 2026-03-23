@@ -57,10 +57,14 @@ func (h *SettingsHandler) Update(c *fiber.Ctx) error {
 		OldValue:  setting.Value,
 		NewValue:  body.Value,
 	}
-	h.DB.Create(&history)
+	if err := h.DB.Create(&history).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": "Failed to save history: " + err.Error()})
+	}
 
 	setting.Value = body.Value
-	h.DB.Save(&setting)
+	if err := h.DB.Save(&setting).Error; err != nil {
+		return c.Status(500).JSON(fiber.Map{"error": err.Error()})
+	}
 
 	return c.JSON(fiber.Map{"data": setting})
 }
