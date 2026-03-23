@@ -168,6 +168,9 @@ function TerminalPanel({ terminal }: { terminal: TerminalInfo }) {
 
   useEffect(() => { outRef.current && (outRef.current.scrollTop = outRef.current.scrollHeight); }, [lines]);
 
+  // Auto-focus terminal on mount
+  useEffect(() => { setTimeout(() => boxRef.current?.focus(), 100); }, []);
+
   const onKey = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     if (!connected) return;
     e.preventDefault();
@@ -211,8 +214,8 @@ function TerminalPanel({ terminal }: { terminal: TerminalInfo }) {
         <span className="text-xs font-mono shrink-0" style={{ color: 'var(--text-muted)' }}>{terminal.cols}x{terminal.rows}</span>
       </div>
       {/* Output */}
-      <div ref={boxRef} className="flex-1 overflow-hidden outline-none" tabIndex={0} onKeyDown={onKey} onClick={() => boxRef.current?.focus()} style={{ background: colors.terminal.black }}>
-        <div ref={outRef} className="h-full overflow-y-auto p-3 font-mono text-xs select-text" style={{ fontFamily: '"SF Mono","Fira Code","JetBrains Mono",Menlo,Consolas,monospace', color: colors.terminal.white }}>
+      <div ref={boxRef} className="flex-1 overflow-hidden outline-none cursor-text" tabIndex={0} onKeyDown={onKey} onClick={() => boxRef.current?.focus()} onFocus={() => boxRef.current?.focus()} style={{ background: colors.terminal.black }}>
+        <div ref={outRef} className="h-full overflow-y-auto p-3 font-mono text-xs select-text" onClick={() => boxRef.current?.focus()} style={{ fontFamily: '"SF Mono","Fira Code","JetBrains Mono",Menlo,Consolas,monospace', color: colors.terminal.white }}>
           {lines.map((l, i) => <AnsiLine key={i} line={l} />)}
           {connected && <div className="h-3 w-1.5 inline-block animate-pulse" style={{ background: colors.terminal.green }} />}
         </div>
